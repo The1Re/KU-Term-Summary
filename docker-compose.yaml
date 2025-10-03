@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:9.4
+    container_name: ku_term_summary_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: p@ssword
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: p@ssword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - warehouse_network
+
+  phpmyadmin:
+    image: phpmyadmin:5.2.2
+    container_name: ku_term_summary_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: myuser
+      PMA_PASSWORD: p@ssword
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - warehouse_network
+
+volumes:
+  mysql_data:
+
+networks:
+  warehouse_network:
+    driver: bridge
