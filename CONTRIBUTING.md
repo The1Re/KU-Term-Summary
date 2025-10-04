@@ -80,16 +80,13 @@ We use ESLint and Prettier to maintain code quality. The configuration is alread
 
    ```
    src/
-   ├── modules/           # Feature modules
-   │   ├── users/
-   │   │   ├── dto/       # Data Transfer Objects
-   │   │   ├── entities/  # Database entities
-   │   │   ├── users.controller.ts
-   │   │   ├── users.service.ts
-   │   │   └── users.module.ts
-   ├── common/            # Shared utilities
-   ├── config/            # Configuration files
-   └── database/          # Database related files
+   ├── modules/                        # Feature modules
+   │   └── student/
+   │       ├── __tests__/              # Unit test
+   │       ├── student.controller.ts
+   │       ├── student.service.ts
+   │       └── student.module.ts
+   └── core/                           # Application core
    ```
 
 4. **API Design**:

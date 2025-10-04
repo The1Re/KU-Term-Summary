@@ -109,24 +109,25 @@ npx prisma migrate dev     # Run migrations
 
 ```
 src/
-├── app.module.ts          # Root application module
-├── main.ts               # Application entry point
-├── config/               # Configuration files
-│   └── env.ts           # Environment configuration
-├── database/            # Database configuration
-│   ├── database.module.ts
-│   └── database.service.ts
-└── modules/             # Feature modules (to be expanded)
-    └── ...
+├── main.ts                      # Application entry point
+├── core
+│   ├── config/                  # Configuration files
+│   │   └── env.ts               # Environment configuration
+│   └── database/                # Database configuration
+│       ├── database.module.ts
+│       └── database.service.ts
+└── modules/                     # Feature modules (to be expanded)
+    ├── ...
+    └── app.module.ts            # Root application module
 
 prisma/
-├── schema.prisma        # Database schema
-├── migrations/          # Database migrations
-├── seed.ts             # Database seeding
-└── schema/             # Schema files
+├── schema.prisma                # Database schema
+├── migrations/                  # Database migrations
+├── seed.ts                      # Database seeding
+└── schema/                      # Schema files
     └── students.prisma
 
-test/                    # Test files
+test/                            # Test e2e files
 ├── app.e2e-spec.ts
 └── jest-e2e.json
 ```
