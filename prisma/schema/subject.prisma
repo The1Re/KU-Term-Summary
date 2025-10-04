@@ -1,0 +1,51 @@
+model Subject {
+    subjectId         Int             @id @default(autoincrement())
+    courseId          Int
+    subjectCaterogyId Int
+    subjectCode       String          @db.VarChar(45)
+    nameSubjectThai   String          @db.VarChar(225)
+    credit            Int
+    course            Course          @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_subject_course1")
+    subject_caterogy  SubjectCaterogy @relation(fields: [subjectCaterogyId], references: [subjectCaterogyId], onDelete: NoAction, onUpdate: NoAction, map: "fk_subject_subject_caterogy1")
+    subject_course    SubjectCourse[]
+    subject_credit    SubjectCredit[]
+
+    @@index([courseId], map: "fk_subject_course1_idx")
+    @@index([subjectCaterogyId], map: "fk_subject_subject_caterogy1_idx")
+    @@map("subject")
+}
+
+model SubjectCaterogy {
+    subjectCaterogyId   Int             @id @default(autoincrement())
+    subjectCategoryName String          @db.VarChar(100)
+    subjectGroupName    String          @db.VarChar(225)
+    credit_require      CreditRequire[]
+    subject             Subject[]
+
+    @@map("subject_caterogy")
+}
+
+model SubjectCourse {
+    subjectCourseId Int            @id @default(autoincrement())
+    subjectId       Int
+    coursePlanId    Int
+    fact_register   FactRegister[]
+    fact_std_plan   FactStdPlan[]
+    course_plan     CoursePlan     @relation(fields: [coursePlanId], references: [coursePlanId], onDelete: NoAction, onUpdate: NoAction, map: "fk_subject_course_course_plan1")
+    subject         Subject        @relation(fields: [subjectId], references: [subjectId], onDelete: NoAction, onUpdate: NoAction, map: "fk_subject_course_subject1")
+
+    @@index([coursePlanId], map: "fk_subject_course_course_plan1_idx")
+    @@index([subjectId], map: "fk_subject_course_subject1_idx")
+    @@map("subject_course")
+}
+
+model SubjectCredit {
+    subjectCreditId Int     @id @default(autoincrement())
+    subjectId       Int
+    lectureCredit   Int
+    labCredit       Int
+    subject         Subject @relation(fields: [subjectId], references: [subjectId], onDelete: NoAction, onUpdate: NoAction, map: "fk_subject_credit_subject1")
+
+    @@index([subjectId], map: "fk_subject_credit_subject1_idx")
+    @@map("subject_credit")
+}

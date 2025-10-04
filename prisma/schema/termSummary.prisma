@@ -1,0 +1,46 @@
+model FactTermSummary {
+    TermSummaryId            Int         @default(autoincrement())
+    studentId                Int
+    creditTerm               Int
+    creditAll                Int
+    gpa                      Float       @db.Float
+    gpax                     Float       @db.Float
+    studyYear                Int
+    studyTerm                Int
+    planStatus               String      @default("nopass") @db.VarChar(45)
+    studentStatus            String      @default(" studying") @db.VarChar(45)
+    isCoop                   Int         @default(0) @db.TinyInt
+    generalSubjectCredit     Int
+    specificSubjectCredit    Int
+    freeSubjectCredit        Int
+    selectSubjectCredit      Int
+    generalSubjectCreditAll  Int
+    specificSubjectCreditAll Int
+    freeSubjectCreditAll     Int
+    selectSubjectCreditAll   Int
+    semesterYearInTerm       Int
+    semesterPartInTerm       Int
+    gradeLabelId             Int?
+    grade_label              GradeLabel? @relation(fields: [gradeLabelId], references: [gradeLabelId], onDelete: NoAction, onUpdate: NoAction, map: "fk_fact-term-summary_grade-label1")
+    student                  Student     @relation(fields: [studentId], references: [studentId], onDelete: NoAction, onUpdate: NoAction, map: "fk_fact-term-summary_student1")
+
+    @@id([TermSummaryId, studentId])
+    @@index([gradeLabelId], map: "fk_fact-term-summary_grade-label1_idx")
+    @@index([studentId], map: "fk_fact-term-summary_student1_idx")
+    @@map("fact_term_summary")
+}
+
+model GradeLabel {
+    gradeLabelId      Int               @id @default(autoincrement())
+    gpaStatusName     String            @db.VarChar(45)
+    gpaMinInStatus    Float             @db.Float
+    gpaStatusMax      Float             @db.Float
+    gpaxStatusName    String            @db.VarChar(45)
+    gpaxStatusMin     Float             @db.Float
+    gpaxStatusMax     Float             @db.Float
+    fact_register     FactRegister[]
+    fact_std_plan     FactStdPlan[]
+    fact_term_summary FactTermSummary[]
+
+    @@map("grade_label")
+}
