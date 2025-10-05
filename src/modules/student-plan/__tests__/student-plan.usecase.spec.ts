@@ -74,8 +74,20 @@ describe('Student Course Plan Usecase', () => {
 
       subjectCourseService.getAllSubjectCoursesByCoursePlanId.mockResolvedValue(
         [
-          { subjectCourseId: 10, coursePlanId: 1, subjectId: 1 },
-          { subjectCourseId: 11, coursePlanId: 1, subjectId: 2 },
+          {
+            subjectCourseId: 10,
+            coursePlanId: 1,
+            subjectId: 1,
+            studyYear: 1,
+            term: 1,
+          },
+          {
+            subjectCourseId: 11,
+            coursePlanId: 1,
+            subjectId: 2,
+            studyYear: 1,
+            term: 1,
+          },
         ]
       );
 
@@ -95,11 +107,21 @@ describe('Student Course Plan Usecase', () => {
       });
       expect(db.factStdPlan.createMany).toHaveBeenCalledWith({
         data: [
-          { studentId: 1, subjectCourseId: 10 },
-          { studentId: 1, subjectCourseId: 11 },
+          {
+            studentId: 1,
+            subjectCourseId: 10,
+            semester: 1,
+            semesterPartInYear: 'ภาคต้น',
+          },
+          {
+            studentId: 1,
+            subjectCourseId: 11,
+            semester: 1,
+            semesterPartInYear: 'ภาคต้น',
+          },
         ],
       });
-      expect(result).toEqual({ count: 2 });
+      expect(result).toEqual({ message: 'Student plan updated successfully' });
     });
   });
 });
