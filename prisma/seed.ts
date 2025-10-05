@@ -201,13 +201,13 @@ const subjects: Prisma.SubjectCreateManyInput[] = [
 ];
 
 const subjectCourses: Prisma.SubjectCourseCreateManyInput[] = [
-  { subjectCourseId: 1, subjectId: 1, coursePlanId: 1 },
-  { subjectCourseId: 2, subjectId: 2, coursePlanId: 1 },
-  { subjectCourseId: 3, subjectId: 3, coursePlanId: 1 },
-  { subjectCourseId: 4, subjectId: 4, coursePlanId: 1 },
-  { subjectCourseId: 5, subjectId: 5, coursePlanId: 1 },
-  { subjectCourseId: 6, subjectId: 6, coursePlanId: 1 },
-  { subjectCourseId: 7, subjectId: 7, coursePlanId: 1 },
+  { subjectCourseId: 1, subjectId: 1, coursePlanId: 1, studyYear: 1, term: 1 },
+  { subjectCourseId: 2, subjectId: 2, coursePlanId: 1, studyYear: 1, term: 1 },
+  { subjectCourseId: 3, subjectId: 3, coursePlanId: 1, studyYear: 1, term: 2 },
+  { subjectCourseId: 4, subjectId: 4, coursePlanId: 1, studyYear: 1, term: 2 },
+  { subjectCourseId: 5, subjectId: 5, coursePlanId: 1, studyYear: 2, term: 1 },
+  { subjectCourseId: 6, subjectId: 6, coursePlanId: 1, studyYear: 2, term: 1 },
+  { subjectCourseId: 7, subjectId: 7, coursePlanId: 1, studyYear: 2, term: 2 },
 ];
 
 const subjectCredits: Prisma.SubjectCreditCreateManyInput[] = [

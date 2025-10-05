@@ -29,6 +29,8 @@ model SubjectCourse {
     subjectCourseId Int            @id @default(autoincrement())
     subjectId       Int
     coursePlanId    Int
+    studyYear       Int
+    term            Int
     fact_register   FactRegister[]
     fact_std_plan   FactStdPlan[]
     course_plan     CoursePlan     @relation(fields: [coursePlanId], references: [coursePlanId], onDelete: NoAction, onUpdate: NoAction, map: "fk_subject_course_course_plan1")
