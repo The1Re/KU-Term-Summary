@@ -8,7 +8,7 @@ model FactTermSummary {
     studyYear                Int
     studyTerm                Int
     planStatus               String      @default("nopass") @db.VarChar(45)
-    studentStatus            String      @default(" studying") @db.VarChar(45)
+    studentStatus            String      @default("studying") @db.VarChar(45)
     isCoop                   Int         @default(0) @db.TinyInt
     generalSubjectCredit     Int
     specificSubjectCredit    Int
@@ -19,7 +19,7 @@ model FactTermSummary {
     freeSubjectCreditAll     Int
     selectSubjectCreditAll   Int
     semesterYearInTerm       Int
-    semesterPartInTerm       Int
+    semesterPartInTerm       String      @db.VarChar(45)
     gradeLabelId             Int?
     grade_label              GradeLabel? @relation(fields: [gradeLabelId], references: [gradeLabelId], onDelete: NoAction, onUpdate: NoAction, map: "fk_fact-term-summary_grade-label1")
     student                  Student     @relation(fields: [studentId], references: [studentId], onDelete: NoAction, onUpdate: NoAction, map: "fk_fact-term-summary_student1")
