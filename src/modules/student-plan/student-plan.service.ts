@@ -50,4 +50,11 @@ export class StudentPlanService {
 
     return result;
   }
+
+  async getStudentPlanByStudentId(studentId: number) {
+    const studentPlan = await this.databaseService.factStdPlan.findMany({
+      where: { studentId: studentId },
+    });
+    return studentPlan;
+  }
 }
