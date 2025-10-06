@@ -2,13 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { StudentService } from '../student/student.service';
 import { StudentPlanService } from '../student-plan/student-plan.service';
 import { DatabaseService } from '@/core/database/database.service';
+import { TermSummaryService } from './term-summary.service';
 
 @Injectable()
 export class TermSummaryUsecase {
   constructor(
     private readonly studentService: StudentService,
     private readonly studentPlanService: StudentPlanService,
-    private readonly databaseService: DatabaseService
+    private readonly databaseService: DatabaseService,
+    private readonly termsSummaryService: TermSummaryService
   ) {}
 
   getTermsForFilter(term: string): string[] {
@@ -58,5 +60,35 @@ export class TermSummaryUsecase {
     });
 
     return !countPlanNotPass;
+  }
+
+  async isEligibleForCoop(studentId: number): Promise<boolean> {
+    const student = await this.studentService.getStudentById(studentId);
+    if (!student) throw new NotFoundException('Student not found');
+
+    const courseplan = await this.databaseService.coursePlan.findUnique({
+      where: { coursePlanId: student.coursePlanId },
+    });
+    if (!courseplan) throw new NotFoundException('Course plan not found');
+
+    const latestTerm = await this.databaseService.factTermSummary.findFirst({
+      where: { studentId },
+      orderBy: [{ studyYear: 'desc' }, { studyTerm: 'desc' }],
+    });
+    if (!latestTerm) throw new NotFoundException('Term summary not found');
+
+    const creditAll = latestTerm.creditAll;
+    const percentage = (creditAll / courseplan.totalCredit) * 100;
+    const canGoCoop = percentage >= 60;
+
+    if (!canGoCoop) return false;
+
+    const curriculumCheck = await this.checkCurriculumStudent(
+      studentId,
+      Number(latestTerm.semesterYearInTerm),
+      String(latestTerm.semesterPartInTerm)
+    );
+
+    return curriculumCheck;
   }
 }
