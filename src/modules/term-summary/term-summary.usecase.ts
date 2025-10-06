@@ -62,7 +62,7 @@ export class TermSummaryUsecase {
     return !countPlanNotPass;
   }
 
-  async isEligibleForCoop(studentId: number): Promise<boolean> {
+  async checkIsEligibleForCoop(studentId: number): Promise<boolean> {
     const student = await this.studentService.getStudentById(studentId);
     if (!student) throw new NotFoundException('Student not found');
 
@@ -83,12 +83,12 @@ export class TermSummaryUsecase {
 
     if (!canGoCoop) return false;
 
-    const curriculumCheck = await this.checkCurriculumStudent(
+    const isFollowPlan = await this.checkFollowPlan(
       studentId,
       Number(latestTerm.semesterYearInTerm),
       String(latestTerm.semesterPartInTerm)
     );
 
-    return curriculumCheck;
+    return isFollowPlan;
   }
 }
