@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { StudentService } from '../student/student.service';
 import { StudentPlanService } from '../student-plan/student-plan.service';
 import { DatabaseService } from '@/core/database/database.service';
-
+import { StudentStatus } from '@/constants/studentStatus';
 @Injectable()
 export class TermSummaryUsecase {
   constructor(
@@ -88,5 +88,63 @@ export class TermSummaryUsecase {
     );
 
     return isFollowPlan;
+  }
+
+  async checkStudentStatus(
+    studentId: number,
+    semester: number,
+    semesterPartInYear: string
+  ) {
+    if (semesterPartInYear === 'ภาคฤดูร้อน') {
+      return StudentStatus.STUDYING;
+    }
+    const student = await this.studentService.getStudentById(studentId);
+    if (!student) throw new NotFoundException('Student not found');
+
+    const courseplan = await this.databaseService.coursePlan.findUnique({
+      where: { coursePlanId: student.coursePlanId },
+    });
+    if (!courseplan) throw new NotFoundException('Course plan not found');
+
+    const Terms = await this.databaseService.factTermSummary.findMany({
+      where: { studentId, semesterPartInTerm: { in: ['ภาคต้น', 'ภาคปลาย'] } },
+      orderBy: [{ studyYear: 'desc' }, { studyTerm: 'desc' }],
+      take: 2,
+    });
+
+    if (!Terms.length) throw new NotFoundException('Term summary not found');
+
+    const [latestTerm, previousTerm] = Terms;
+
+    const isFirstTerm = (year: number, term: number) =>
+      year === 1 && term === 1;
+    const gpaxLow = latestTerm.gpax < 1.75;
+    const gpaxCritical = latestTerm.gpax < 1.5;
+    const previousGpaxLow = previousTerm?.gpax < 1.75;
+
+    if (gpaxLow && !isFirstTerm(latestTerm.studyYear, latestTerm.studyTerm)) {
+      if (gpaxCritical || previousGpaxLow) {
+        if (
+          !isFirstTerm(
+            previousTerm?.studyYear ?? 1,
+            previousTerm?.studyTerm ?? 1
+          )
+        ) {
+          return StudentStatus.TERMINATION;
+        }
+      }
+    }
+
+    // เช็คจำนวนหน่วยกิต
+    if (latestTerm.creditAll >= courseplan.totalCredit) {
+      const isFollowPlan = await this.checkFollowPlan(
+        studentId,
+        semester,
+        semesterPartInYear
+      );
+      if (isFollowPlan) return StudentStatus.GRADUATED;
+    }
+
+    return StudentStatus.STUDYING;
   }
 }
