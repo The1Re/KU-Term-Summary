@@ -2,15 +2,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { StudentService } from '../student/student.service';
 import { StudentPlanService } from '../student-plan/student-plan.service';
 import { DatabaseService } from '@/core/database/database.service';
-import { TermSummaryService } from './term-summary.service';
 
 @Injectable()
 export class TermSummaryUsecase {
   constructor(
     private readonly studentService: StudentService,
     private readonly studentPlanService: StudentPlanService,
-    private readonly databaseService: DatabaseService,
-    private readonly termsSummaryService: TermSummaryService
+    private readonly databaseService: DatabaseService
   ) {}
 
   getTermsForFilter(term: string): string[] {
