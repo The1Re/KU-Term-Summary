@@ -3,11 +3,14 @@ import { StudentService } from '../student/student.service';
 import { StudentPlanService } from '../student-plan/student-plan.service';
 import { DatabaseService } from '@/core/database/database.service';
 import { StudentStatus } from '@/constants/studentStatus';
+import { Prisma } from '@prisma/client';
+import { RegisterService } from '../register/register.service';
 @Injectable()
 export class TermSummaryUsecase {
   constructor(
     private readonly studentService: StudentService,
     private readonly studentPlanService: StudentPlanService,
+    private readonly registerService: RegisterService,
     private readonly databaseService: DatabaseService
   ) {}
 
@@ -136,7 +139,6 @@ export class TermSummaryUsecase {
       }
     }
 
-    // เช็คจำนวนหน่วยกิต
     if (latestTerm.creditAll >= courseplan.totalCredit) {
       const isFollowPlan = await this.checkFollowPlan(
         studentId,
@@ -147,5 +149,151 @@ export class TermSummaryUsecase {
     }
 
     return StudentStatus.STUDYING;
+  }
+
+  async getCurrentYearTerm(studentId: string) {
+    const latest = await this.databaseService.factRegister.findFirst({
+      where: { studentId },
+      orderBy: [{ studyYearInRegis: 'desc' }, { studyTermInRegis: 'desc' }],
+      select: {
+        studyYearInRegis: true,
+        studyTermInRegis: true,
+        semesterYearInRegis: true,
+        semesterPartInRegis: true,
+      },
+    });
+
+    return latest;
+  }
+
+  async TermSummaryForStudent(studentId: string) {
+    const lastYearTerm = await this.getCurrentYearTerm(studentId);
+    if (!lastYearTerm) return null; // ถ้าไม่มีข้อมูล return null
+
+    const regist = await this.databaseService.factRegister.findMany({
+      where: {
+        studentId,
+        studyYearInRegis: lastYearTerm.studyYearInRegis,
+        studyTermInRegis: lastYearTerm.studyTermInRegis,
+      },
+      orderBy: [{ studyYearInRegis: 'asc' }, { studyTermInRegis: 'asc' }],
+      include: {
+        subject_course: {
+          include: {
+            subject: {
+              include: {
+                subject_caterogy: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (regist.length === 0) return null;
+
+    const studyYear = regist[0].studyYearInRegis;
+    const studyTerm = regist[0].studyTermInRegis;
+    const semesterYearInTerm = regist[0].semesterYearInRegis;
+    const semesterPartInTerm = regist[0].semesterPartInRegis;
+
+    const creditTerm = regist.reduce((sum, r) => sum + r.creditRegis, 0);
+
+    let generalSubjectCredit = 0;
+    let specificSubjectCredit = 0;
+    let freeSubjectCredit = 0;
+    const selectSubjectCredit = 0;
+
+    for (const r of regist) {
+      const categoryId =
+        r.subject_course.subject.subject_caterogy.subjectCaterogyId;
+
+      switch (categoryId) {
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+          generalSubjectCredit += r.creditRegis;
+          break;
+        case 6:
+          freeSubjectCredit += r.creditRegis;
+          break;
+        case 7:
+        case 8:
+        case 9:
+          specificSubjectCredit += r.creditRegis;
+          break;
+      }
+    }
+
+    const previousTermSummary =
+      await this.databaseService.factTermSummary.findFirst({
+        where: { studentId },
+        orderBy: [
+          { semesterYearInTerm: 'desc' },
+          { semesterPartInTerm: 'desc' },
+        ],
+      });
+
+    const creditAll = (previousTermSummary?.creditAll ?? 0) + creditTerm;
+    const generalSubjectCreditAll =
+      (previousTermSummary?.generalSubjectCreditAll ?? 0) +
+      generalSubjectCredit;
+    const specificSubjectCreditAll =
+      (previousTermSummary?.specificSubjectCreditAll ?? 0) +
+      specificSubjectCredit;
+    const freeSubjectCreditAll =
+      (previousTermSummary?.freeSubjectCreditAll ?? 0) + freeSubjectCredit;
+    const selectSubjectCreditAll =
+      (previousTermSummary?.selectSubjectCreditAll ?? 0) + selectSubjectCredit;
+
+    const gpa = 0;
+    const gpax = 0;
+
+    const planStatusBool = await this.checkFollowPlan(
+      studentId,
+      studyYear,
+      semesterPartInTerm
+    );
+    const planStatus = planStatusBool ? 'ผ่าน' : 'ไม่ผ่าน';
+
+    const isCoopAllowed = await this.checkIsEligibleForCoop(studentId);
+    const studentStatus = await this.checkStudentStatus(
+      studentId,
+      studyYear,
+      semesterPartInTerm
+    );
+
+    const gradeLabelId = null;
+
+    const toCreate: Prisma.FactTermSummaryCreateManyInput = {
+      studentId,
+      creditTerm,
+      creditAll,
+      gpa,
+      gpax,
+      studyYear,
+      studyTerm,
+      planStatus,
+      studentStatus,
+      isCoop: isCoopAllowed,
+      generalSubjectCredit,
+      specificSubjectCredit,
+      freeSubjectCredit,
+      selectSubjectCredit,
+      generalSubjectCreditAll,
+      specificSubjectCreditAll,
+      freeSubjectCreditAll,
+      selectSubjectCreditAll,
+      semesterYearInTerm,
+      semesterPartInTerm,
+      gradeLabelId: gradeLabelId ?? null,
+    };
+    const created = await this.databaseService.factTermSummary.create({
+      data: toCreate,
+    });
+
+    return created;
   }
 }
