@@ -1,6 +1,6 @@
 model FactTermSummary {
     TermSummaryId            Int         @default(autoincrement())
-    studentId                Int
+    studentId                String
     creditTerm               Int
     creditAll                Int
     gpa                      Float       @db.Float
@@ -9,7 +9,7 @@ model FactTermSummary {
     studyTerm                Int
     planStatus               String      @default("nopass") @db.VarChar(45)
     studentStatus            String      @default("studying") @db.VarChar(45)
-    isCoop                   Int         @default(0) @db.TinyInt
+    isCoop                   Boolean     @default(false)
     generalSubjectCredit     Int
     specificSubjectCredit    Int
     freeSubjectCredit        Int

@@ -24,7 +24,7 @@ export class TermSummaryUsecase {
   }
 
   async checkFollowPlan(
-    studentId: number,
+    studentId: string,
     semester: number,
     semesterPartInYear: string
   ) {
@@ -60,7 +60,7 @@ export class TermSummaryUsecase {
     return !countPlanNotPass;
   }
 
-  async checkIsEligibleForCoop(studentId: number): Promise<boolean> {
+  async checkIsEligibleForCoop(studentId: string): Promise<boolean> {
     const student = await this.studentService.getStudentById(studentId);
     if (!student) throw new NotFoundException('Student not found');
 
@@ -91,7 +91,7 @@ export class TermSummaryUsecase {
   }
 
   async checkStudentStatus(
-    studentId: number,
+    studentId: string,
     semester: number,
     semesterPartInYear: string
   ) {

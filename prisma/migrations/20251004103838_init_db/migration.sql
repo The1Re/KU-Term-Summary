@@ -44,7 +44,7 @@ CREATE TABLE `credit_require` (
 
 -- CreateTable
 CREATE TABLE `fact_register` (
-    `registerId` INTEGER NOT NULL AUTO_INCREMENT,
+    `regisId` INTEGER NOT NULL AUTO_INCREMENT,
     `studentId` INTEGER NOT NULL,
     `creditRequireId` INTEGER NOT NULL,
     `subjectCourseId` INTEGER NOT NULL,
@@ -58,7 +58,7 @@ CREATE TABLE `fact_register` (
     INDEX `fk_register_credit_require1_idx`(`creditRequireId`),
     INDEX `fk_register_student1_idx`(`studentId`),
     INDEX `fk_register_sublect_course1_idx`(`subjectCourseId`),
-    PRIMARY KEY (`registerId`)
+    PRIMARY KEY (`regisId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable

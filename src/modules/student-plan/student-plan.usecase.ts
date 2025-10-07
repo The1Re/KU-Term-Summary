@@ -21,7 +21,7 @@ export class StudentPlanUsecase {
     return termMap[term - 1] || 'ไม่รู้จัก';
   }
 
-  async createStudentPlan(studentId: number) {
+  async createStudentPlan(studentId: string) {
     const student = await this.studentService.getStudentById(studentId);
     if (!student) {
       throw new NotFoundException('Student not found');

@@ -9,7 +9,7 @@ export class TermSummaryService {
     private readonly databaseService: DatabaseService
   ) {}
 
-  async getAllTermSummaries(studentId: number) {
+  async getAllTermSummaries(studentId: string) {
     const student = await this.studentService.getStudentById(studentId);
     if (!student) {
       throw new NotFoundException('Student not found');

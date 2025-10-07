@@ -1,49 +1,52 @@
 model Course {
-    courseId      Int          @id @default(autoincrement())
-    nameCourseTh  String       @db.VarChar(225)
-    nameCourseUse String       @db.VarChar(45)
-    course_plan   CoursePlan[]
-    subject       Subject[]
+  courseId      Int          @id @default(autoincrement())
+  nameCourseTh  String       @db.VarChar(225)
+  nameCourseUse String       @db.VarChar(45)
+  course_plan   CoursePlan[]
+  subject       Subject[]
 
-    @@map("course")
+  @@map("course")
 }
 
 model CoursePlan {
-    coursePlanId                  Int             @id @default(autoincrement())
-    courseId                      Int
-    planCourse                    String          @db.VarChar(225)
-    totalCredit                   Int
-    generalSubjectCredit          Int
-    specificSubjectCredit         Int
-    freeSubjectCredit             Int
-    coreSubjectCredit             Int
-    spacailSubjectCredit          Int
-    selectSubjectCredit           Int
-    happySubjectCredit            Int
-    entrepreneurshipSubjectCredit Int
-    languageSubjectCredit         Int
-    peopleSubjectCredit           Int
-    aestheticsSubjectCredit       Int
-    internshipHours               Int
-    course                        Course          @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_course_plan_course1")
-    credit_require                CreditRequire[]
-    student                       Student[]
-    subject_course                SubjectCourse[]
+  coursePlanId                  Int             @id @default(autoincrement())
+  courseId                      Int
+  planCourse                    String          @db.VarChar(225)
+  creditIntern                  Int
+  totalCredit                   Int
+  couseStartYear                Int
+  couseEndYear                  Int
+  generalSubjectCredit          Int
+  specificSubjectCredit         Int
+  freeSubjectCredit             Int
+  coreSubjectCredit             Int
+  spacailSubjectCredit          Int
+  selectSubjectCredit           Int
+  happySubjectCredit            Int
+  entrepreneurshipSubjectCredit Int
+  languageSubjectCredit         Int
+  peopleSubjectCredit           Int
+  aestheticsSubjectCredit       Int
+  internshipHours               Int?
+  course                        Course          @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_course_plan_course1")
+  credit_require                CreditRequire[]
+  student                       Student[]
+  subject_course                SubjectCourse[]
 
-    @@index([courseId], map: "fk_course_plan_course1_idx")
-    @@map("course_plan")
+  @@index([courseId], map: "fk_course_plan_course1_idx")
+  @@map("course_plan")
 }
 
 model CreditRequire {
-    creditRequireId   Int             @id @default(autoincrement())
-    coursePlanId      Int
-    subjectCaterogyId Int
-    credit            Int
-    course_plan       CoursePlan      @relation(fields: [coursePlanId], references: [coursePlanId], onDelete: NoAction, onUpdate: NoAction, map: "fk_credit_require_course_plan1")
-    subject_caterogy  SubjectCaterogy @relation(fields: [subjectCaterogyId], references: [subjectCaterogyId], onDelete: NoAction, onUpdate: NoAction, map: "fk_credit_require_subject_caterogy1")
-    fact_register     FactRegister[]
+  creditRequireId   Int             @id @default(autoincrement())
+  coursePlanId      Int
+  subjectCaterogyId Int
+  creditSubject     Int
+  course_plan       CoursePlan      @relation(fields: [coursePlanId], references: [coursePlanId], onDelete: NoAction, onUpdate: NoAction, map: "fk_credit_require_course_plan1")
+  subject_caterogy  SubjectCaterogy @relation(fields: [subjectCaterogyId], references: [subjectCaterogyId], onDelete: NoAction, onUpdate: NoAction, map: "fk_credit_require_subject_caterogy1")
+  fact_register     FactRegister[]
 
-    @@index([coursePlanId], map: "fk_credit_require_course_plan1_idx")
-    @@index([subjectCaterogyId], map: "fk_credit_require_subject_caterogy1_idx")
-    @@map("credit_require")
+  @@index([coursePlanId], map: "fk_credit_require_course_plan1_idx")
+  @@index([subjectCaterogyId], map: "fk_credit_require_subject_caterogy1_idx")
+  @@map("credit_require")
 }

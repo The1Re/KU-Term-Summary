@@ -5,7 +5,7 @@ import { Injectable } from '@nestjs/common';
 export class StudentService {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  async getStudentById(studentId: number) {
+  async getStudentById(studentId: string) {
     return this.databaseService.student.findUnique({
       where: { studentId: studentId },
     });

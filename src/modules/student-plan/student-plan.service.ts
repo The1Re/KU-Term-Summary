@@ -5,7 +5,7 @@ import { Injectable } from '@nestjs/common';
 export class StudentPlanService {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  async getStudentPlanByStudentId(studentId: number) {
+  async getStudentPlanByStudentId(studentId: string) {
     const studentPlan = await this.databaseService.factStdPlan.findMany({
       where: { studentId: studentId },
     });

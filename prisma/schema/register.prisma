@@ -1,12 +1,15 @@
 model FactRegister {
-    registerId          Int           @id @default(autoincrement())
-    studentId           Int
+    regisId             Int           @id @default(autoincrement())
+    studentId           String
     creditRequireId     Int
     subjectCourseId     Int
-    semester            Int
-    semesterPartInRegis String        @db.VarChar(45)
     gradeNumber         Float?        @db.Float
     gradeCharacter      String?       @db.VarChar(45)
+    creditRegis         Int
+    studyYearInRegis    Int
+    studyTermInRegis    Int
+    semesterYearInRegis Int
+    semesterPartInRegis String        @db.VarChar(45)
     gradeLabelId        Int?
     grade_label         GradeLabel?   @relation(fields: [gradeLabelId], references: [gradeLabelId], onDelete: NoAction, onUpdate: NoAction, map: "fk_fact_register_grade_label1")
     credit_require      CreditRequire @relation(fields: [creditRequireId], references: [creditRequireId], onDelete: NoAction, onUpdate: NoAction, map: "fk_register_credit-require1")
