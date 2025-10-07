@@ -76,8 +76,9 @@ export class TermSummaryUsecase {
     if (!latestTerm) throw new NotFoundException('Term summary not found');
 
     const creditAll = latestTerm.creditAll;
-    const percentage = (creditAll / courseplan.totalCredit) * 100;
-    const canGoCoop = percentage >= 60;
+    const creditIntern = courseplan.creditIntern;
+
+    const canGoCoop = creditAll >= creditIntern;
 
     if (!canGoCoop) return false;
 

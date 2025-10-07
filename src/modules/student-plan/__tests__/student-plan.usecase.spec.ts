@@ -44,7 +44,7 @@ describe('Student Course Plan Usecase', () => {
 
   describe('Create Student Course Plan', () => {
     const mockStudent: Student = {
-      studentId: 1,
+      studentId: '6520501234',
       studentUsername: 'testuser',
       studentStatusId: 1,
       coursePlanId: 100,
@@ -53,9 +53,9 @@ describe('Student Course Plan Usecase', () => {
     it('should throw error if student not found', async () => {
       studentService.getStudentById.mockResolvedValue(null);
 
-      await expect(studentPlanUsecase.createStudentPlan(1)).rejects.toThrow(
-        'Student not found'
-      );
+      await expect(
+        studentPlanUsecase.createStudentPlan('6520501234')
+      ).rejects.toThrow('Student not found');
     });
 
     it('should throw error if subject courses not found', async () => {
@@ -64,9 +64,9 @@ describe('Student Course Plan Usecase', () => {
         []
       );
 
-      await expect(studentPlanUsecase.createStudentPlan(1)).rejects.toThrow(
-        'No subject courses found for this course plan'
-      );
+      await expect(
+        studentPlanUsecase.createStudentPlan('6520501234')
+      ).rejects.toThrow('No subject courses found for this course plan');
     });
 
     it('should create student plan successfully', async () => {
@@ -94,7 +94,7 @@ describe('Student Course Plan Usecase', () => {
       (db.factStdPlan.deleteMany as jest.Mock).mockResolvedValue({ count: 0 });
       (db.factStdPlan.createMany as jest.Mock).mockResolvedValue({ count: 2 });
 
-      const result = await studentPlanUsecase.createStudentPlan(1);
+      const result = await studentPlanUsecase.createStudentPlan('6520501234');
 
       expect(db.$transaction).toHaveBeenCalled();
       expect(db.$transaction).toHaveBeenCalledTimes(1);
@@ -103,18 +103,18 @@ describe('Student Course Plan Usecase', () => {
         expect.any(Object)
       );
       expect(db.factStdPlan.deleteMany).toHaveBeenCalledWith({
-        where: { studentId: 1 },
+        where: { studentId: '6520501234' },
       });
       expect(db.factStdPlan.createMany).toHaveBeenCalledWith({
         data: [
           {
-            studentId: 1,
+            studentId: '6520501234',
             subjectCourseId: 10,
             semester: 1,
             semesterPartInYear: 'ภาคต้น',
           },
           {
-            studentId: 1,
+            studentId: '6520501234',
             subjectCourseId: 11,
             semester: 1,
             semesterPartInYear: 'ภาคต้น',

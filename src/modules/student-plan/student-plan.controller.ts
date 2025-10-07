@@ -1,11 +1,22 @@
-import { Controller, Param, Put } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, NotFoundException, Param, Put } from '@nestjs/common';
+import {
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { StudentPlanUsecase } from './student-plan.usecase';
+import { StudentPlanDto } from './student-plan.dto';
+import { StudentPlanService } from './student-plan.service';
 
 @Controller('/student-plans')
 @ApiTags('Student Plans')
 export class StudentPlanController {
-  constructor(private readonly studentPlanUsecase: StudentPlanUsecase) {}
+  constructor(
+    private readonly studentPlanUsecase: StudentPlanUsecase,
+    private readonly studentPlanService: StudentPlanService
+  ) {}
 
   @Put(':studentId')
   @ApiOperation({
@@ -45,5 +56,36 @@ export class StudentPlanController {
   })
   changeStudentPlan(@Param('studentId') studentId: string) {
     return this.studentPlanUsecase.createStudentPlan(studentId);
+  }
+
+  @Get(':studentId')
+  @ApiOkResponse({
+    description: 'Fetched student plan successfully',
+    type: StudentPlanDto,
+    isArray: true,
+  })
+  @ApiOperation({
+    summary: 'Get all student plan',
+  })
+  @ApiNotFoundResponse({
+    description: 'Student not found',
+    schema: {
+      example: { message: 'Student not found' },
+    },
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+    example: {
+      message: 'Internal server error',
+    },
+  })
+  async getStudentPlan(@Param('studentId') studentId: string) {
+    const student =
+      await this.studentPlanService.getStudentPlanByStudentId(studentId);
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+    return this.studentPlanService.getStudentPlanByStudentId(studentId);
   }
 }

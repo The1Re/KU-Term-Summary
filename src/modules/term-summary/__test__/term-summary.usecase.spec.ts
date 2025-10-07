@@ -43,7 +43,7 @@ describe('TermSummaryUsecase', () => {
 
   describe('Check is Follow Plan', () => {
     const mockStudent = {
-      studentId: 1,
+      studentId: '6520503333',
       studentUsername: 'testuser',
       studentStatusId: 1,
       coursePlanId: 100,
@@ -52,7 +52,7 @@ describe('TermSummaryUsecase', () => {
     it('should throw error if student not found', async () => {
       studentService.getStudentById.mockResolvedValue(null);
 
-      await expect(usecase.checkFollowPlan(1, 1, 'ภาคต้น')).rejects.toThrow(
+      await expect(usecase.checkFollowPlan('1', 1, 'ภาคต้น')).rejects.toThrow(
         NotFoundException
       );
     });
@@ -61,7 +61,7 @@ describe('TermSummaryUsecase', () => {
       studentService.getStudentById.mockResolvedValue(mockStudent);
       studentPlanService.getStudentPlanByStudentId.mockResolvedValue([]);
 
-      await expect(usecase.checkFollowPlan(1, 1, 'ภาคต้น')).rejects.toThrow(
+      await expect(usecase.checkFollowPlan('1', 1, 'ภาคต้น')).rejects.toThrow(
         NotFoundException
       );
     });
@@ -72,7 +72,7 @@ describe('TermSummaryUsecase', () => {
         {
           stdPlanId: 1,
           subjectCourseId: 101,
-          studentId: 1,
+          studentId: '6520503333',
           gradeLabelId: 1,
           semester: 1,
           grade: 'A',
@@ -83,7 +83,7 @@ describe('TermSummaryUsecase', () => {
       ]);
       (db.factStdPlan.count as jest.Mock).mockResolvedValue(2); // > 0 not pass
 
-      const result = await usecase.checkFollowPlan(1, 2, 'ภาคปลาย');
+      const result = await usecase.checkFollowPlan('1', 2, 'ภาคปลาย');
       expect(result).toBe(false);
     });
 
@@ -93,7 +93,7 @@ describe('TermSummaryUsecase', () => {
         {
           stdPlanId: 1,
           subjectCourseId: 101,
-          studentId: 1,
+          studentId: '6520503333',
           gradeLabelId: 1,
           semester: 1,
           grade: 'A',
@@ -104,7 +104,7 @@ describe('TermSummaryUsecase', () => {
       ]);
       (db.factStdPlan.count as jest.Mock).mockResolvedValue(0); // no not pass
 
-      const result = await usecase.checkFollowPlan(1, 2, 'ภาคปลาย');
+      const result = await usecase.checkFollowPlan('1', 2, 'ภาคปลาย');
       expect(result).toBe(true);
     });
 
@@ -114,7 +114,7 @@ describe('TermSummaryUsecase', () => {
         {
           stdPlanId: 1,
           subjectCourseId: 101,
-          studentId: 1,
+          studentId: '6520503333',
           semester: 1,
           gradeLabelId: 1,
           grade: 'A',
@@ -126,7 +126,7 @@ describe('TermSummaryUsecase', () => {
 
       (db.factStdPlan.count as jest.Mock).mockResolvedValue(0);
 
-      await usecase.checkFollowPlan(1, 2, 'ภาคฤดูร้อน');
+      await usecase.checkFollowPlan('1', 2, 'ภาคฤดูร้อน');
 
       expect(db.factStdPlan.count).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -181,21 +181,21 @@ describe('TermSummaryUsecase', () => {
     it('should throw NotFoundException if student not found', async () => {
       (studentService.getStudentById as jest.Mock).mockResolvedValueOnce(null);
 
-      await expect(usecase.checkStudentStatus(1, 1, 'ภาคต้น')).rejects.toThrow(
-        NotFoundException
-      );
+      await expect(
+        usecase.checkStudentStatus('1', 1, 'ภาคต้น')
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw NotFoundException if course plan not found', async () => {
       (db.coursePlan.findUnique as jest.Mock).mockResolvedValue(null);
 
-      await expect(usecase.checkStudentStatus(1, 1, 'ภาคต้น')).rejects.toThrow(
-        NotFoundException
-      );
+      await expect(
+        usecase.checkStudentStatus('1', 1, 'ภาคต้น')
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should return STUDYING immediately if semesterPartInYear is ภาคฤดูร้อน', async () => {
-      const result = await usecase.checkStudentStatus(1, 1, 'ภาคฤดูร้อน');
+      const result = await usecase.checkStudentStatus('1', 1, 'ภาคฤดูร้อน');
       expect(result).toBe(StudentStatus.STUDYING);
     });
 
@@ -208,7 +208,7 @@ describe('TermSummaryUsecase', () => {
 
       jest.spyOn(usecase, 'checkFollowPlan').mockResolvedValue(false);
 
-      const result = await usecase.checkStudentStatus(1, 1, 'ภาคต้น');
+      const result = await usecase.checkStudentStatus('1', 1, 'ภาคต้น');
       expect(result).toBe(StudentStatus.TERMINATION);
     });
 
@@ -225,7 +225,7 @@ describe('TermSummaryUsecase', () => {
         { gpax: 1.6, creditAll: 20, studyYear: 1, studyTerm: 2 },
       ]);
 
-      const result = await usecase.checkStudentStatus(1, 1, 'ภาคต้น');
+      const result = await usecase.checkStudentStatus('1', 1, 'ภาคต้น');
       expect(result).toBe(StudentStatus.TERMINATION);
     });
 
@@ -241,7 +241,7 @@ describe('TermSummaryUsecase', () => {
         { gpax: 1.4, creditAll: 100, studyYear: 1, studyTerm: 1 },
       ]);
 
-      const result = await usecase.checkStudentStatus(1, 1, 'ภาคต้น');
+      const result = await usecase.checkStudentStatus('1', 1, 'ภาคต้น');
       expect(result).toBe(StudentStatus.STUDYING);
     });
 
@@ -258,7 +258,7 @@ describe('TermSummaryUsecase', () => {
         { gpax: 1.6, creditAll: 20, studyYear: 1, studyTerm: 1 },
       ]);
 
-      const result = await usecase.checkStudentStatus(1, 1, 'ภาคต้น');
+      const result = await usecase.checkStudentStatus('1', 1, 'ภาคต้น');
       expect(result).toBe(StudentStatus.STUDYING);
     });
 
@@ -269,7 +269,7 @@ describe('TermSummaryUsecase', () => {
       ]);
       jest.spyOn(usecase, 'checkFollowPlan').mockResolvedValue(true);
 
-      const result = await usecase.checkStudentStatus(1, 1, 'ภาคต้น');
+      const result = await usecase.checkStudentStatus('1', 1, 'ภาคต้น');
       expect(result).toBe(StudentStatus.GRADUATED);
     });
 
@@ -280,8 +280,119 @@ describe('TermSummaryUsecase', () => {
       ]);
       jest.spyOn(usecase, 'checkFollowPlan').mockResolvedValue(false);
 
-      const result = await usecase.checkStudentStatus(1, 1, 'ภาคต้น');
+      const result = await usecase.checkStudentStatus('1', 1, 'ภาคต้น');
       expect(result).toBe(StudentStatus.STUDYING);
     });
+  });
+});
+
+describe('checkIsEligibleForCoop', () => {
+  let usecase: TermSummaryUsecase;
+  let studentService: jest.Mocked<StudentService>;
+  let db: jest.Mocked<DatabaseService>;
+
+  const mockStudent = {
+    studentId: '6520503333',
+    studentUsername: 'testuser',
+    studentStatusId: 1,
+    coursePlanId: 100,
+  };
+
+  const mockCoursePlan = { totalCredit: 120, creditIntern: 60 };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        TermSummaryUsecase,
+        {
+          provide: StudentService,
+          useValue: { getStudentById: jest.fn() },
+        },
+        {
+          provide: DatabaseService,
+          useValue: {
+            coursePlan: { findUnique: jest.fn() },
+            factTermSummary: { findFirst: jest.fn() },
+            factStdPlan: { count: jest.fn() },
+          },
+        },
+        {
+          provide: StudentPlanService,
+          useValue: { getStudentPlanByStudentId: jest.fn() },
+        },
+      ],
+    }).compile();
+
+    usecase = module.get<TermSummaryUsecase>(TermSummaryUsecase);
+    studentService = module.get(StudentService);
+    db = module.get(DatabaseService);
+  });
+
+  it('should throw NotFoundException if student not found', async () => {
+    studentService.getStudentById.mockResolvedValue(null);
+    await expect(usecase.checkIsEligibleForCoop('1')).rejects.toThrow(
+      NotFoundException
+    );
+  });
+
+  it('should throw NotFoundException if course plan not found', async () => {
+    studentService.getStudentById.mockResolvedValue(mockStudent);
+    (db.coursePlan.findUnique as jest.Mock).mockResolvedValue(null);
+    await expect(usecase.checkIsEligibleForCoop('1')).rejects.toThrow(
+      NotFoundException
+    );
+  });
+
+  it('should throw NotFoundException if term summary not found', async () => {
+    studentService.getStudentById.mockResolvedValue(mockStudent);
+    (db.coursePlan.findUnique as jest.Mock).mockResolvedValue(mockCoursePlan);
+    (db.factTermSummary.findFirst as jest.Mock).mockResolvedValue(null);
+
+    await expect(usecase.checkIsEligibleForCoop('1')).rejects.toThrow(
+      NotFoundException
+    );
+  });
+
+  it('should return false if creditAll < creditInten', async () => {
+    studentService.getStudentById.mockResolvedValue(mockStudent);
+    (db.coursePlan.findUnique as jest.Mock).mockResolvedValue(mockCoursePlan);
+    (db.factTermSummary.findFirst as jest.Mock).mockResolvedValue({
+      creditAll: 50,
+      semesterYearInTerm: 1,
+      semesterPartInTerm: 'ภาคต้น',
+      creditIntern: 60,
+    });
+
+    const result = await usecase.checkIsEligibleForCoop('1');
+    expect(result).toBe(false);
+  });
+
+  it('should return true if creditAll >= creditInten and follow plan', async () => {
+    studentService.getStudentById.mockResolvedValue(mockStudent);
+    (db.coursePlan.findUnique as jest.Mock).mockResolvedValue(mockCoursePlan);
+    (db.factTermSummary.findFirst as jest.Mock).mockResolvedValue({
+      creditAll: 80,
+      semesterYearInTerm: 2,
+      semesterPartInTerm: 'ภาคปลาย',
+      creditIntern: 60,
+    });
+    jest.spyOn(usecase, 'checkFollowPlan').mockResolvedValue(true);
+
+    const result = await usecase.checkIsEligibleForCoop('1');
+    expect(result).toBe(true);
+  });
+
+  it('should return false if follow plan is false', async () => {
+    studentService.getStudentById.mockResolvedValue(mockStudent);
+    (db.coursePlan.findUnique as jest.Mock).mockResolvedValue(mockCoursePlan);
+    (db.factTermSummary.findFirst as jest.Mock).mockResolvedValue({
+      creditAll: 100,
+      semesterYearInTerm: 2,
+      semesterPartInTerm: 'ภาคปลาย',
+    });
+    jest.spyOn(usecase, 'checkFollowPlan').mockResolvedValue(false);
+
+    const result = await usecase.checkIsEligibleForCoop('1');
+    expect(result).toBe(false);
   });
 });
