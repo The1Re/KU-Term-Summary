@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { StudentPlanService } from '../student-plan.service';
 import { StudentService } from '@/modules/student/student.service';
 import { SubjectCourseService } from '@/modules/subject-course/subject-course.service';
 import { DatabaseService } from '@/core/database/database.service';
 import { Student } from '@prisma/client';
+import { StudentPlanUsecase } from '../student-plan.usecase';
 
-describe('Student Course Plan Service', () => {
-  let studentPlanService: StudentPlanService;
+describe('Student Course Plan Usecase', () => {
+  let studentPlanUsecase: StudentPlanUsecase;
   let studentService: jest.Mocked<StudentService>;
   let subjectCourseService: jest.Mocked<SubjectCourseService>;
   let db: jest.Mocked<DatabaseService>;
@@ -14,7 +14,7 @@ describe('Student Course Plan Service', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        StudentPlanService,
+        StudentPlanUsecase,
         {
           provide: StudentService,
           useValue: { getStudentById: jest.fn() },
@@ -36,7 +36,7 @@ describe('Student Course Plan Service', () => {
       ],
     }).compile();
 
-    studentPlanService = module.get<StudentPlanService>(StudentPlanService);
+    studentPlanUsecase = module.get<StudentPlanUsecase>(StudentPlanUsecase);
     studentService = module.get(StudentService);
     subjectCourseService = module.get(SubjectCourseService);
     db = module.get(DatabaseService);
@@ -53,7 +53,7 @@ describe('Student Course Plan Service', () => {
     it('should throw error if student not found', async () => {
       studentService.getStudentById.mockResolvedValue(null);
 
-      await expect(studentPlanService.createStudentPlan(1)).rejects.toThrow(
+      await expect(studentPlanUsecase.createStudentPlan(1)).rejects.toThrow(
         'Student not found'
       );
     });
@@ -64,7 +64,7 @@ describe('Student Course Plan Service', () => {
         []
       );
 
-      await expect(studentPlanService.createStudentPlan(1)).rejects.toThrow(
+      await expect(studentPlanUsecase.createStudentPlan(1)).rejects.toThrow(
         'No subject courses found for this course plan'
       );
     });
@@ -82,7 +82,7 @@ describe('Student Course Plan Service', () => {
       (db.factStdPlan.deleteMany as jest.Mock).mockResolvedValue({ count: 0 });
       (db.factStdPlan.createMany as jest.Mock).mockResolvedValue({ count: 2 });
 
-      const result = await studentPlanService.createStudentPlan(1);
+      const result = await studentPlanUsecase.createStudentPlan(1);
 
       expect(db.$transaction).toHaveBeenCalled();
       expect(db.$transaction).toHaveBeenCalledTimes(1);
