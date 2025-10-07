@@ -1,4 +1,4 @@
-import { Controller, Param, ParseIntPipe, Put } from '@nestjs/common';
+import { Controller, Param, Put } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { StudentPlanUsecase } from './student-plan.usecase';
 
@@ -43,7 +43,7 @@ export class StudentPlanController {
       message: 'Internal server error',
     },
   })
-  changeStudentPlan(@Param('studentId', ParseIntPipe) studentId: number) {
+  changeStudentPlan(@Param('studentId') studentId: string) {
     return this.studentPlanUsecase.createStudentPlan(studentId);
   }
 }
