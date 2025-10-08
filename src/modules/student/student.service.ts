@@ -10,4 +10,10 @@ export class StudentService {
       where: { studentId: studentId },
     });
   }
+
+  async getAllStudents() {
+    return this.databaseService.student.findMany({
+      where: { studentStatusId: 1 },
+    });
+  }
 }

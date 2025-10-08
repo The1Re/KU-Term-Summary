@@ -10,5 +10,6 @@ import { StudentPlanUsecase } from './student-plan.usecase';
   imports: [StudentModule, SubjectCourseModule, RegisterModule],
   providers: [StudentPlanService, StudentPlanUsecase],
   controllers: [StudentPlanController],
+  exports: [StudentPlanService],
 })
 export class StudentPlanModule {}
