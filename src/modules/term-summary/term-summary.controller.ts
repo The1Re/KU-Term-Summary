@@ -12,13 +12,17 @@ import { StudentService } from '../student/student.service';
 import { CreateTermSummaryDto, TermSummaryDto } from './term-summary.dto';
 import { Student } from '@prisma/client';
 import { TermSummaryUsecase } from './term-summary.usecase';
+import { StudentPlanUsecase } from '../student-plan/student-plan.usecase';
+import { StudentPlanService } from '../student-plan/student-plan.service';
 
 @Controller('/term-summary')
 @ApiTags('Term Summary')
 export class TermSummaryController {
   constructor(
     private readonly termSummaryUsecase: TermSummaryUsecase,
+    private readonly studentPlanUsecase: StudentPlanUsecase,
     private readonly termSummaryService: TermSummaryService,
+    private readonly studentPlanService: StudentPlanService,
     private readonly studentService: StudentService
   ) {}
 
@@ -105,6 +109,15 @@ export class TermSummaryController {
     }
 
     for (const student of students) {
+      const studentPlan =
+        await this.studentPlanService.getStudentPlanByStudentId(
+          student.studentId
+        );
+
+      if (!studentPlan) {
+        await this.studentPlanUsecase.createStudentPlan(student.studentId);
+      }
+      await this.studentPlanUsecase.updateStudentPlan(student.studentId);
       await this.termSummaryUsecase.summaryTermForStudent(student.studentId);
     }
 

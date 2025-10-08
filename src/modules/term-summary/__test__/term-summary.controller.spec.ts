@@ -5,6 +5,8 @@ import { NotFoundException } from '@nestjs/common';
 import { StudentService } from '@/modules/student/student.service';
 import { Student } from '@prisma/client';
 import { TermSummaryUsecase } from '../term-summary.usecase';
+import { StudentPlanUsecase } from '@/modules/student-plan/student-plan.usecase';
+import { StudentPlanService } from '@/modules/student-plan/student-plan.service';
 
 describe('TermSummaryController', () => {
   let termSummaryController: TermSummaryController;
@@ -22,6 +24,17 @@ describe('TermSummaryController', () => {
         {
           provide: TermSummaryUsecase,
           useValue: { summaryTermForStudent: jest.fn() },
+        },
+        {
+          provide: StudentPlanUsecase,
+          useValue: {
+            createStudentPlan: jest.fn(),
+            updateStudentPlan: jest.fn(),
+          },
+        },
+        {
+          provide: StudentPlanService,
+          useValue: { getStudentPlanByStudentId: jest.fn() },
         },
         { provide: TermSummaryService, useValue: serviceMock },
         { provide: StudentService, useValue: { getStudentById: jest.fn() } },
