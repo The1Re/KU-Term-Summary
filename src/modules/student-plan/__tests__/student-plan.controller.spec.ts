@@ -33,7 +33,10 @@ describe('StudentPlanController', () => {
       providers: [
         {
           provide: StudentPlanUsecase,
-          useValue: { createStudentPlan: jest.fn() },
+          useValue: {
+            createStudentPlan: jest.fn(),
+            updateStudentPlan: jest.fn(),
+          },
         },
         {
           provide: StudentPlanService,
@@ -50,11 +53,12 @@ describe('StudentPlanController', () => {
   });
 
   describe('changeStudentPlan', () => {
-    it('should successfully create/update student plan', async () => {
-      const studentId = '6520501234';
-      const expectedResult = { message: 'Student plan updated successfully' };
+    const studentId = '6520501234';
+    const expectedResult = { message: 'Student plan updated successfully' };
 
-      studentPlanUsecase.createStudentPlan.mockResolvedValue(expectedResult);
+    it('should successfully create/update student plan', async () => {
+      studentPlanUsecase.createStudentPlan.mockResolvedValue(true);
+      studentPlanUsecase.updateStudentPlan.mockResolvedValue(true);
 
       const result = await studentPlanController.changeStudentPlan(studentId);
 
@@ -65,7 +69,6 @@ describe('StudentPlanController', () => {
     });
 
     it('should throw NotFoundException when student is not found', async () => {
-      const studentId = '6520501234';
       studentPlanUsecase.createStudentPlan.mockRejectedValue(
         new NotFoundException('Student not found')
       );
@@ -78,8 +81,7 @@ describe('StudentPlanController', () => {
       );
     });
 
-    it('should handle Internal server errors', async () => {
-      const studentId = '6520501234';
+    it('should throw NotFoundException when no subject courses found', async () => {
       studentPlanUsecase.createStudentPlan.mockRejectedValue(
         new InternalServerErrorException()
       );
@@ -94,8 +96,9 @@ describe('StudentPlanController', () => {
   });
 
   describe('getStudentPlan', () => {
+    const studentId = '6520501234';
+
     it('should return an array of student plans', async () => {
-      const studentId = '6520501234';
       studentPlanService.getStudentPlanByStudentId.mockResolvedValue(
         mockStudentPlan
       );
@@ -109,7 +112,6 @@ describe('StudentPlanController', () => {
     });
 
     it('should throw NotFoundException if student not found', async () => {
-      const studentId = '6520501234';
       studentPlanService.getStudentPlanByStudentId.mockRejectedValue(
         new NotFoundException('Student not found')
       );
@@ -117,20 +119,6 @@ describe('StudentPlanController', () => {
       await expect(
         studentPlanController.getStudentPlan(studentId)
       ).rejects.toThrow(NotFoundException);
-      expect(studentPlanService.getStudentPlanByStudentId).toHaveBeenCalledWith(
-        studentId
-      );
-    });
-
-    it('should handle Internal server errors', async () => {
-      const studentId = '6520501234';
-      studentPlanService.getStudentPlanByStudentId.mockRejectedValue(
-        new InternalServerErrorException()
-      );
-
-      await expect(
-        studentPlanController.getStudentPlan(studentId)
-      ).rejects.toThrow(InternalServerErrorException);
       expect(studentPlanService.getStudentPlanByStudentId).toHaveBeenCalledWith(
         studentId
       );

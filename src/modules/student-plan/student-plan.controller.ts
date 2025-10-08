@@ -54,8 +54,10 @@ export class StudentPlanController {
       message: 'Internal server error',
     },
   })
-  changeStudentPlan(@Param('studentId') studentId: string) {
-    return this.studentPlanUsecase.createStudentPlan(studentId);
+  async changeStudentPlan(@Param('studentId') studentId: string) {
+    await this.studentPlanUsecase.createStudentPlan(studentId);
+    await this.studentPlanUsecase.updateStudentPlan(studentId);
+    return { message: 'Student plan updated successfully' };
   }
 
   @Get(':studentId')

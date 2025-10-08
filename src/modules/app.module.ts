@@ -7,6 +7,7 @@ import { StudentPlanModule } from '@/modules/student-plan/student-plan.module';
 import { StudentModule } from '@/modules/student/student.module';
 import { SubjectCourseModule } from './subject-course/subject-course.module';
 import { TermSummaryModule } from './term-summary/term-summary.module';
+import { RegisterModule } from './register/register.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { TermSummaryModule } from './term-summary/term-summary.module';
     StudentModule,
     SubjectCourseModule,
     TermSummaryModule,
+    RegisterModule,
   ],
   controllers: [AppController],
 })
