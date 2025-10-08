@@ -1,9 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { StudentService } from '../student/student.service';
 import { StudentPlanService } from '../student-plan/student-plan.service';
 import { DatabaseService } from '@/core/database/database.service';
 import { StudentStatus } from '@/constants/studentStatus';
-import { Prisma } from '@prisma/client';
+import { FactRegister, Prisma } from '@prisma/client';
 import { RegisterService } from '../register/register.service';
 @Injectable()
 export class TermSummaryUsecase {
@@ -13,6 +17,37 @@ export class TermSummaryUsecase {
     private readonly registerService: RegisterService,
     private readonly databaseService: DatabaseService
   ) {}
+
+  private calculateGpa(registers: FactRegister[]) {
+    const excludedGrades = ['W', 'I', 'S', 'U', 'P'];
+
+    const valid = registers.filter(
+      r =>
+        r.gradeNumber !== null &&
+        r.creditRegis > 0 &&
+        !excludedGrades.includes(r.gradeCharacter?.toUpperCase() ?? '')
+    );
+
+    if (valid.length === 0)
+      return { gpa: 0, totalCredits: 0, totalWeightedPoints: 0 };
+
+    const totalWeightedPoints = valid.reduce(
+      (sum, r) => sum + (r.gradeNumber ?? 0) * r.creditRegis,
+      0
+    );
+    const totalCredits = valid.reduce((sum, r) => sum + r.creditRegis, 0);
+    const gpa = totalCredits > 0 ? totalWeightedPoints / totalCredits : 0;
+
+    if (!registers || registers.length === 0) {
+      return { gpa: 0, totalCredits: 0, totalWeightedPoints: 0 };
+    }
+
+    return {
+      gpa: parseFloat(gpa.toFixed(2)),
+      totalCredits,
+      totalWeightedPoints,
+    };
+  }
 
   getTermsForFilter(term: string): string[] {
     switch (term) {
@@ -302,5 +337,50 @@ export class TermSummaryUsecase {
     });
 
     return created;
+  }
+
+  async getGpa(studentId: string, year: number, term: string) {
+    const student = await this.studentService.getStudentById(studentId);
+    if (!student) throw new NotFoundException('Student not found');
+
+    const registers = await this.databaseService.factRegister.findMany({
+      where: {
+        studentId,
+        semesterYearInRegis: year,
+        semesterPartInRegis: term,
+      },
+    });
+
+    if (!registers || registers.length === 0) {
+      throw new NotFoundException(
+        'No register records found for the given term'
+      );
+    }
+
+    try {
+      const { gpa } = this.calculateGpa(registers);
+      return { gpa };
+    } catch (_error) {
+      throw new InternalServerErrorException('Failed to calculate GPA');
+    }
+  }
+
+  async getGpax(studentId: string) {
+    const student = await this.studentService.getStudentById(studentId);
+    if (!student) throw new NotFoundException('Student not found');
+
+    try {
+      const registers = await this.databaseService.factRegister.findMany({
+        where: { studentId },
+      });
+
+      const { gpa } = this.calculateGpa(registers);
+
+      return {
+        gpax: gpa,
+      };
+    } catch (_error) {
+      throw new InternalServerErrorException('Failed to calculate GPAX');
+    }
   }
 }
