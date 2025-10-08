@@ -63,7 +63,11 @@ export class TermSummaryUsecase {
     return !countPlanNotPass;
   }
 
-  async checkIsEligibleForCoop(studentId: string): Promise<boolean> {
+  async checkIsEligibleForCoop(
+    studentId: string,
+    year: number,
+    term: string
+  ): Promise<boolean> {
     const student = await this.studentService.getStudentById(studentId);
     if (!student) throw new NotFoundException('Student not found');
 
@@ -76,9 +80,8 @@ export class TermSummaryUsecase {
       where: { studentId },
       orderBy: [{ studyYear: 'desc' }, { studyTerm: 'desc' }],
     });
-    if (!latestTerm) throw new NotFoundException('Term summary not found');
 
-    const creditAll = latestTerm.creditAll;
+    const creditAll = latestTerm?.creditAll ?? 0;
     const creditIntern = courseplan.creditIntern;
 
     const canGoCoop = creditAll >= creditIntern;
@@ -87,8 +90,8 @@ export class TermSummaryUsecase {
 
     const isFollowPlan = await this.checkFollowPlan(
       studentId,
-      Number(latestTerm.semesterYearInTerm),
-      String(latestTerm.semesterPartInTerm)
+      Number(year),
+      String(term)
     );
 
     return isFollowPlan;
@@ -116,7 +119,7 @@ export class TermSummaryUsecase {
       take: 2,
     });
 
-    if (!Terms.length) throw new NotFoundException('Term summary not found');
+    if (!Terms.length) return StudentStatus.STUDYING;
 
     const [latestTerm, previousTerm] = Terms;
 
@@ -166,7 +169,7 @@ export class TermSummaryUsecase {
     return latest;
   }
 
-  async TermSummaryForStudent(studentId: string) {
+  async summaryTermForStudent(studentId: string) {
     const lastYearTerm = await this.getCurrentYearTerm(studentId);
     if (!lastYearTerm) return null; // ถ้าไม่มีข้อมูล return null
 
@@ -258,7 +261,11 @@ export class TermSummaryUsecase {
     );
     const planStatus = planStatusBool ? 'ผ่าน' : 'ไม่ผ่าน';
 
-    const isCoopAllowed = await this.checkIsEligibleForCoop(studentId);
+    const isCoopAllowed = await this.checkIsEligibleForCoop(
+      studentId,
+      semesterYearInTerm,
+      semesterPartInTerm
+    );
     const studentStatus = await this.checkStudentStatus(
       studentId,
       studyYear,

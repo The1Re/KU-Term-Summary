@@ -79,3 +79,13 @@ export class TermSummaryDto
   })
   gradeLabelId: number | null;
 }
+
+export class CreateTermSummaryDto {
+  @ApiProperty({
+    example: ['6520501234', '6520501235'],
+    description: 'list ของ รหัสนักศึกษา',
+    required: false,
+    type: [String],
+  })
+  studentIds?: string[];
+}

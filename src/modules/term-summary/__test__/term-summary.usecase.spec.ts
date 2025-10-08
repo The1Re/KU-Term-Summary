@@ -309,32 +309,24 @@ describe('TermSummaryUsecase', () => {
       studentStatusId: 1,
       coursePlanId: 100,
     };
+    const term = 'ภาคปลาย';
+    const year = 2567;
 
     const mockCoursePlan = { totalCredit: 120, creditIntern: 60 };
 
     it('should throw NotFoundException if student not found', async () => {
       studentService.getStudentById.mockResolvedValue(null);
-      await expect(usecase.checkIsEligibleForCoop('1')).rejects.toThrow(
-        NotFoundException
-      );
+      await expect(
+        usecase.checkIsEligibleForCoop('1', year, term)
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw NotFoundException if course plan not found', async () => {
       studentService.getStudentById.mockResolvedValue(mockStudent);
       (db.coursePlan.findUnique as jest.Mock).mockResolvedValue(null);
-      await expect(usecase.checkIsEligibleForCoop('1')).rejects.toThrow(
-        NotFoundException
-      );
-    });
-
-    it('should throw NotFoundException if term summary not found', async () => {
-      studentService.getStudentById.mockResolvedValue(mockStudent);
-      (db.coursePlan.findUnique as jest.Mock).mockResolvedValue(mockCoursePlan);
-      (db.factTermSummary.findFirst as jest.Mock).mockResolvedValue(null);
-
-      await expect(usecase.checkIsEligibleForCoop('1')).rejects.toThrow(
-        NotFoundException
-      );
+      await expect(
+        usecase.checkIsEligibleForCoop('1', year, term)
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should return false if creditAll < creditInten', async () => {
@@ -347,7 +339,7 @@ describe('TermSummaryUsecase', () => {
         creditIntern: 60,
       });
 
-      const result = await usecase.checkIsEligibleForCoop('1');
+      const result = await usecase.checkIsEligibleForCoop('1', year, term);
       expect(result).toBe(false);
     });
 
@@ -362,7 +354,7 @@ describe('TermSummaryUsecase', () => {
       });
       jest.spyOn(usecase, 'checkFollowPlan').mockResolvedValue(true);
 
-      const result = await usecase.checkIsEligibleForCoop('1');
+      const result = await usecase.checkIsEligibleForCoop('1', year, term);
       expect(result).toBe(true);
     });
 
@@ -376,7 +368,7 @@ describe('TermSummaryUsecase', () => {
       });
       jest.spyOn(usecase, 'checkFollowPlan').mockResolvedValue(false);
 
-      const result = await usecase.checkIsEligibleForCoop('1');
+      const result = await usecase.checkIsEligibleForCoop('1', year, term);
       expect(result).toBe(false);
     });
   });
@@ -473,13 +465,13 @@ describe('TermSummaryUsecase', () => {
     it('should return null if no latest term', async () => {
       jest.spyOn(usecase, 'getCurrentYearTerm').mockResolvedValue(null);
 
-      const result = await usecase.TermSummaryForStudent('12345');
+      const result = await usecase.summaryTermForStudent('12345');
       expect(result).toBeNull();
     });
 
     it('should return null if no register records found', async () => {
       registerService.getAllRegistersByStudentId.mockResolvedValue([]);
-      const result = await usecase.TermSummaryForStudent('12345');
+      const result = await usecase.summaryTermForStudent('12345');
       expect(result).toBeNull();
     });
 
@@ -526,7 +518,7 @@ describe('TermSummaryUsecase', () => {
         freeSubjectCredit: 0,
       });
 
-      const result = await usecase.TermSummaryForStudent('12345');
+      const result = await usecase.summaryTermForStudent('12345');
 
       expect(db.factRegister.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
