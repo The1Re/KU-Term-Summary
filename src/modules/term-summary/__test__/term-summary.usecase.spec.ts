@@ -628,7 +628,7 @@ describe('TermSummaryUsecase', () => {
 
       const result = await termSummaryUsecase.getGpa(studentId, 2568, 'ภาคต้น');
 
-      expect(result).toEqual({ gpa: 3.5 });
+      expect(result).toEqual(3.5);
     });
 
     it('should throw NotFoundException if student not found', async () => {
@@ -686,7 +686,7 @@ describe('TermSummaryUsecase', () => {
 
       const result = await termSummaryUsecase.getGpax(studentId);
 
-      expect(result).toEqual({ gpax: 3.5 });
+      expect(result).toEqual(3.5);
     });
 
     it('should throw NotFoundException if student not found', async () => {
@@ -707,7 +707,7 @@ describe('TermSummaryUsecase', () => {
 
       const result = await termSummaryUsecase.getGpax(studentId);
 
-      expect(result).toEqual({ gpax: 0 });
+      expect(result).toEqual(0);
     });
 
     it('should throw InternalServerErrorException if database query fails', async () => {

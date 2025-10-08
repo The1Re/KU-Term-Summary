@@ -286,8 +286,12 @@ export class TermSummaryUsecase {
     const selectSubjectCreditAll =
       (previousTermSummary?.selectSubjectCreditAll ?? 0) + selectSubjectCredit;
 
-    const gpa = 0;
-    const gpax = 0;
+    const gpa = await this.getGpa(
+      studentId,
+      semesterYearInTerm,
+      semesterPartInTerm
+    );
+    const gpax = await this.getGpax(studentId);
 
     const planStatusBool = await this.checkFollowPlan(
       studentId,
@@ -359,7 +363,7 @@ export class TermSummaryUsecase {
 
     try {
       const { gpa } = this.calculateGpa(registers);
-      return { gpa };
+      return gpa;
     } catch (_error) {
       throw new InternalServerErrorException('Failed to calculate GPA');
     }
@@ -376,9 +380,7 @@ export class TermSummaryUsecase {
 
       const { gpa } = this.calculateGpa(registers);
 
-      return {
-        gpax: gpa,
-      };
+      return gpa;
     } catch (_error) {
       throw new InternalServerErrorException('Failed to calculate GPAX');
     }
