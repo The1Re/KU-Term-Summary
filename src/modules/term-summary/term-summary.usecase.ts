@@ -6,7 +6,11 @@ import {
 import { StudentService } from '../student/student.service';
 import { StudentPlanService } from '../student-plan/student-plan.service';
 import { DatabaseService } from '@/core/database/database.service';
-import { StudentStatus } from '@/constants/studentStatus';
+import {
+  CoopStatus,
+  PlanStatus,
+  StudentStatus,
+} from '@/constants/termSummaryStatus';
 import { FactRegister, Prisma } from '@prisma/client';
 import { RegisterService } from '../register/register.service';
 @Injectable()
@@ -49,23 +53,20 @@ export class TermSummaryUsecase {
     };
   }
 
-  getTermsForFilter(term: string): string[] {
+  getTermsForFilter(term: number): number[] {
     switch (term) {
-      case 'ภาคต้น':
-        return ['ภาคต้น'];
-      case 'ภาคปลาย':
-      case 'ภาคฤดูร้อน':
-        return ['ภาคต้น', 'ภาคปลาย'];
+      case 1:
+        return [1];
+      case 2:
+      case 3:
+        return [1, 2];
       default:
         return [term];
     }
   }
 
-  async checkFollowPlan(
-    studentId: string,
-    semester: number,
-    semesterPartInYear: string
-  ) {
+  async checkFollowPlan(studentId: string, year: number, term: number) {
+    console.log(year, term);
     const student = await this.studentService.getStudentById(studentId);
     if (!student) {
       throw new NotFoundException('Student not found');
@@ -76,6 +77,7 @@ export class TermSummaryUsecase {
     if (studentPlan.length === 0) {
       throw new NotFoundException('Student plan not found');
     }
+    console.log(this.getTermsForFilter(year));
 
     const countPlanNotPass = await this.databaseService.factStdPlan.count({
       where: {
@@ -83,26 +85,23 @@ export class TermSummaryUsecase {
         isPass: false,
         OR: [
           {
-            semester: { lt: semester },
+            studyYear: { lt: year },
           },
           {
-            semester: semester,
-            semesterPartInYear: {
-              in: this.getTermsForFilter(semesterPartInYear),
+            studyYear: year,
+            studyTerm: {
+              in: this.getTermsForFilter(term),
             },
           },
         ],
       },
     });
+    console.log(countPlanNotPass);
 
     return !countPlanNotPass;
   }
 
-  async checkIsEligibleForCoop(
-    studentId: string,
-    year: number,
-    term: string
-  ): Promise<boolean> {
+  async checkIsEligibleForCoop(studentId: string, year: number, term: number) {
     const student = await this.studentService.getStudentById(studentId);
     if (!student) throw new NotFoundException('Student not found');
 
@@ -120,24 +119,21 @@ export class TermSummaryUsecase {
     const creditIntern = courseplan.creditIntern;
 
     const canGoCoop = creditAll >= creditIntern;
+    console.log(canGoCoop);
 
-    if (!canGoCoop) return false;
+    if (!canGoCoop) return CoopStatus.NOPASS;
 
-    const isFollowPlan = await this.checkFollowPlan(
-      studentId,
-      Number(year),
-      String(term)
-    );
+    const isFollowPlan = await this.checkFollowPlan(studentId, year, term);
+    console.log(isFollowPlan);
 
-    return isFollowPlan;
+    if (isFollowPlan) {
+      return CoopStatus.PASS;
+    }
+    return CoopStatus.NOPASS;
   }
 
-  async checkStudentStatus(
-    studentId: string,
-    semester: number,
-    semesterPartInYear: string
-  ) {
-    if (semesterPartInYear === 'ภาคฤดูร้อน') {
+  async checkStudentStatus(studentId: string, year: number, term: number) {
+    if (term === 3) {
       return StudentStatus.STUDYING;
     }
     const student = await this.studentService.getStudentById(studentId);
@@ -178,11 +174,7 @@ export class TermSummaryUsecase {
     }
 
     if (latestTerm.creditAll >= courseplan.totalCredit) {
-      const isFollowPlan = await this.checkFollowPlan(
-        studentId,
-        semester,
-        semesterPartInYear
-      );
+      const isFollowPlan = await this.checkFollowPlan(studentId, year, term);
       if (isFollowPlan) return StudentStatus.GRADUATED;
     }
 
@@ -206,7 +198,7 @@ export class TermSummaryUsecase {
 
   async summaryTermForStudent(studentId: string) {
     const lastYearTerm = await this.getCurrentYearTerm(studentId);
-    if (!lastYearTerm) return null; // ถ้าไม่มีข้อมูล return null
+    if (!lastYearTerm) return null;
 
     const regist = await this.databaseService.factRegister.findMany({
       where: {
@@ -245,6 +237,8 @@ export class TermSummaryUsecase {
     for (const r of regist) {
       const categoryId =
         r.subject_course.subject.subject_caterogy.subjectCaterogyId;
+
+      console.log('categoryId:', categoryId);
 
       switch (categoryId) {
         case 1:
@@ -286,29 +280,27 @@ export class TermSummaryUsecase {
     const selectSubjectCreditAll =
       (previousTermSummary?.selectSubjectCreditAll ?? 0) + selectSubjectCredit;
 
-    const gpa = await this.getGpa(
-      studentId,
-      semesterYearInTerm,
-      semesterPartInTerm
-    );
+    const gpa = await this.getGpa(studentId, studyYear, studyTerm);
     const gpax = await this.getGpax(studentId);
 
     const planStatusBool = await this.checkFollowPlan(
       studentId,
       studyYear,
-      semesterPartInTerm
+      studyTerm
     );
-    const planStatus = planStatusBool ? 'ผ่าน' : 'ไม่ผ่าน';
+    const planStatus = planStatusBool
+      ? PlanStatus.FOLLOW
+      : PlanStatus.NOTFOLLOW;
 
-    const isCoopAllowed = await this.checkIsEligibleForCoop(
+    const coopStatus = await this.checkIsEligibleForCoop(
       studentId,
-      semesterYearInTerm,
-      semesterPartInTerm
+      studyYear,
+      studyTerm
     );
     const studentStatus = await this.checkStudentStatus(
       studentId,
       studyYear,
-      semesterPartInTerm
+      studyTerm
     );
 
     const gradeLabelId = null;
@@ -323,7 +315,7 @@ export class TermSummaryUsecase {
       studyTerm,
       planStatus,
       studentStatus,
-      isCoop: isCoopAllowed,
+      coopStatus,
       generalSubjectCredit,
       specificSubjectCredit,
       freeSubjectCredit,
@@ -343,15 +335,15 @@ export class TermSummaryUsecase {
     return created;
   }
 
-  async getGpa(studentId: string, year: number, term: string) {
+  async getGpa(studentId: string, year: number, term: number) {
     const student = await this.studentService.getStudentById(studentId);
     if (!student) throw new NotFoundException('Student not found');
 
     const registers = await this.databaseService.factRegister.findMany({
       where: {
         studentId,
-        semesterYearInRegis: year,
-        semesterPartInRegis: term,
+        studyYearInRegis: year,
+        studyTermInRegis: term,
       },
     });
 

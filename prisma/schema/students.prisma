@@ -23,18 +23,18 @@ model StudentStatus {
 }
 
 model FactStdPlan {
-  stdPlanId          Int           @id @default(autoincrement())
-  studentId          String
-  subjectCourseId    Int
-  gradeLabelId       Int?
-  grade              String?       @db.VarChar(45)
-  isPass             Boolean       @default(false)
-  note               String?       @db.VarChar(45)
-  semester           Int
-  semesterPartInYear String        @db.VarChar(45)
-  student            Student       @relation(fields: [studentId], references: [studentId], onDelete: NoAction, onUpdate: NoAction, map: "fk_fact-std-plan_student1")
-  grade_label        GradeLabel?   @relation(fields: [gradeLabelId], references: [gradeLabelId], onDelete: NoAction, onUpdate: NoAction, map: "fk_fact_std_plan_grade_label1")
-  subject_course     SubjectCourse @relation(fields: [subjectCourseId], references: [subjectCourseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_fact_std_plan_subject_course1")
+  stdPlanId       Int           @id @default(autoincrement())
+  studentId       String
+  subjectCourseId Int
+  gradeLabelId    Int?
+  grade           String?       @db.VarChar(45)
+  isPass          Boolean       @default(false)
+  note            String?       @db.VarChar(45)
+  studyYear       Int
+  studyTerm       Int
+  student         Student       @relation(fields: [studentId], references: [studentId], onDelete: NoAction, onUpdate: NoAction, map: "fk_fact-std-plan_student1")
+  grade_label     GradeLabel?   @relation(fields: [gradeLabelId], references: [gradeLabelId], onDelete: NoAction, onUpdate: NoAction, map: "fk_fact_std_plan_grade_label1")
+  subject_course  SubjectCourse @relation(fields: [subjectCourseId], references: [subjectCourseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_fact_std_plan_subject_course1")
 
   @@index([studentId], map: "fk_fact-std-plan_student1_idx")
   @@index([gradeLabelId], map: "fk_fact_std_plan_grade_label1_idx")

@@ -81,7 +81,7 @@ export class TermSummaryController {
       studentNotFound: {
         summary: 'Student Not Found',
         value: {
-          message: 'Student with ID 6520501234 not found',
+          message: 'Student with ID not found',
         },
       },
     },

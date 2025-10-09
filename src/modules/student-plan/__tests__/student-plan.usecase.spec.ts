@@ -125,14 +125,14 @@ describe('Student Course Plan Usecase', () => {
           {
             studentId: '6520501234',
             subjectCourseId: 10,
-            semester: 1,
-            semesterPartInYear: 'ภาคต้น',
+            studyYear: 1,
+            studyTerm: 1,
           },
           {
             studentId: '6520501234',
             subjectCourseId: 11,
-            semester: 1,
-            semesterPartInYear: 'ภาคต้น',
+            studyYear: 1,
+            studyTerm: 1,
           },
         ],
       });
@@ -150,8 +150,8 @@ describe('Student Course Plan Usecase', () => {
         grade: 'A',
         isPass: true,
         note: null,
-        semester: 2568,
-        semesterPartInYear: 'ภาคต้น',
+        studyYear: 1,
+        studyTerm: 1,
       },
       {
         studentId: '6520501234',
@@ -161,8 +161,8 @@ describe('Student Course Plan Usecase', () => {
         grade: 'F',
         isPass: false,
         note: null,
-        semester: 2568,
-        semesterPartInYear: 'ภาคต้น',
+        studyYear: 1,
+        studyTerm: 1,
       },
       {
         studentId: '6520501234',
@@ -172,8 +172,8 @@ describe('Student Course Plan Usecase', () => {
         grade: null,
         isPass: false,
         note: null,
-        semester: 2568,
-        semesterPartInYear: 'ภาคปลาย',
+        studyTerm: 1,
+        studyYear: 2,
       },
     ];
     const mockRegisters: FactRegister[] = [
@@ -274,8 +274,8 @@ describe('Student Course Plan Usecase', () => {
           grade: 'A',
           isPass: true,
           note: null,
-          semester: 2568,
-          semesterPartInYear: 'ภาคต้น',
+          studyYear: 1,
+          studyTerm: 1,
         },
       ]);
       registerService.getAllRegistersByStudentId.mockResolvedValue(
