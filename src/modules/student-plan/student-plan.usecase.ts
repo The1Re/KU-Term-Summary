@@ -53,10 +53,8 @@ export class StudentPlanUsecase {
                 ({
                   studentId: studentId,
                   subjectCourseId: subjectCourse.subjectCourseId,
-                  semester: subjectCourse.studyYear,
-                  semesterPartInYear: this.mapTermToString(
-                    Number(subjectCourse.term)
-                  ),
+                  studyYear: subjectCourse.studyYear,
+                  studyTerm: subjectCourse.term,
                 }) as Prisma.FactStdPlanCreateManyInput
             ),
           }),

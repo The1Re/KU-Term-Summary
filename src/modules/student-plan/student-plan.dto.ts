@@ -35,13 +35,13 @@ export class StudentPlanDto
 
   @ApiProperty({
     example: 1,
-    description: 'ภาคการศึกษา (1 = ภาคต้น, 2 = ภาคปลาย, 3 = ภาคฤดูร้อน)',
+    description: 'ปี (1 , 2, 3)',
   })
-  semester: number;
+  studyYear: number;
 
   @ApiProperty({
-    example: 'ภาคต้น',
-    description: 'ชื่อภาคการศึกษา (ภาคต้น, ภาคปลาย, หรือ ภาคฤดูร้อน)',
+    example: 1,
+    description: 'ภาคการศึกษา (1, 2, หรือ 3)',
   })
-  semesterPartInYear: string;
+  studyTerm: number;
 }

@@ -6,9 +6,9 @@ export class TermSummaryDto
 {
   @ApiProperty({
     example: 1,
-    description: 'รหัสผลการเรียนภาคการศึกษา (TermsummaryId)',
+    description: 'รหัสผลการเรียนภาคการศึกษา (termsummaryId)',
   })
-  TermSummaryId: number;
+  termSummaryId: number;
 
   @ApiProperty({ example: '6520501234', description: 'รหัสนักศึกษา' })
   studentId: string;
@@ -37,8 +37,8 @@ export class TermSummaryDto
   @ApiProperty({ example: 'กำลังศึกษา', description: 'สภานะนิสิตปัจจุบัน' })
   studentStatus: string;
 
-  @ApiProperty({ example: 'False', description: 'ไปสหกิจได้หรือไม่' })
-  isCoop: boolean;
+  @ApiProperty({ example: 'ไม่ผ่าน', description: 'ไปสหกิจได้หรือไม่' })
+  coopStatus: string;
 
   @ApiProperty({ example: 6, description: 'หน่วยกิตหมวดศึกษาทั่วไป' })
   generalSubjectCredit: number;
