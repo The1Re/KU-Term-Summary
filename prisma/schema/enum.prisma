@@ -1,123 +1,97 @@
 enum LeaveTypeType {
-    PersonalLeave @map("ลากิจ")
-    SickLeave     @map("ลาป่วย")
+  PersonalLeave @map("ลากิจ")
+  SickLeave     @map("ลาป่วย")
 
-    @@map("leave_type_type")
+  @@map("leave_type_type")
 }
 
 enum FactLeaveType {
-    PersonalLeave @map("ลากิจ")
-    SickLeave     @map("ลาป่วย")
+  PersonalLeave @map("ลากิจ")
+  SickLeave     @map("ลาป่วย")
 
-    @@map("fact_leave_type")
+  @@map("fact_leave_type")
 }
 
 enum RoomRoomType {
-    Lecture    @map("Lecture")
-    Laboratory @map("Laboratory")
-    Meeting    @map("Meeting")
+  Lecture    @map("Lecture")
+  Laboratory @map("Laboratory")
+  Meeting    @map("Meeting")
 
-    @@map("room_room_type")
+  @@map("room_room_type")
 }
 
 enum FactClassSemesterPart {
-    First  @map("0")
-    Second @map("1")
-    Summer @map("2")
+  First  @map("0")
+  Second @map("1")
+  Summer @map("2")
 
-    @@map("fact_class_semester_part")
+  @@map("fact_class_semester_part")
 }
 
 enum StudentGenderTh {
-    Male   @map("ชาย")
-    Female @map("หญิง")
+  Male   @map("ชาย")
+  Female @map("หญิง")
 
-    @@map("student_gender_th")
+  @@map("student_gender_th")
 }
 
 enum StudentGenderEng {
-    Male   @map("Male")
-    Female @map("Female")
+  Male   @map("Male")
+  Female @map("Female")
 
-    @@map("student_gender_eng")
+  @@map("student_gender_eng")
 }
 
 enum FactClassSecType {
-    Lec @map("Lec")
-    Lab @map("Lab")
+  Lec @map("Lec")
+  Lab @map("Lab")
 
-    @@map("fact_class_sec_type")
+  @@map("fact_class_sec_type")
 }
 
 enum StudentTitleTh {
-    Mr  @map("นาย")
-    Ms  @map("นางสาว")
-    Mrs @map("นาง")
+  Mr  @map("นาย")
+  Ms  @map("นางสาว")
+  Mrs @map("นาง")
 
-    @@map("student_title_th")
+  @@map("student_title_th")
 }
 
 enum FactRegisterTypeRegis {
-    Audit  @map("0")
-    Credit @map("1")
+  Audit  @map("0")
+  Credit @map("1")
 
-    @@map("fact_register_type_regis")
+  @@map("fact_register_type_regis")
 }
 
 enum StudentTitleEng {
-    Mr  @map("Mr.")
-    Mrs @map("Mrs.")
-    Ms  @map("Miss")
+  Mr  @map("Mr.")
+  Mrs @map("Mrs.")
+  Ms  @map("Miss")
 
-    @@map("student_title_eng")
-}
-
-enum FactLeaveStatusAdvisor {
-    Pending  @map("pending")
-    Approved @map("approved")
-    Rejected @map("rejected")
-
-    @@map("fact_leave_status_advisor")
-}
-
-enum FactLeaveStatusDepartHead {
-    NotRequired @map("not_required")
-    Pending     @map("pending")
-    Rejected    @map("rejected")
-    Approved    @map("approved")
-
-    @@map("fact_leave_status_depart_head")
-}
-
-enum FactLeaveStatusDean {
-    NotRequired @map("not_required")
-    Pending     @map("pending")
-    Rejected    @map("rejected")
-    Approved    @map("approved")
-
-    @@map("fact_leave_status_dean")
+  @@map("student_title_eng")
 }
 
 enum FactRegisterSemesterPartInRegis {
-    First  @map("0")
-    Second @map("1")
-    Summer @map("2")
+  First  @map("0")
+  Second @map("1")
+  Summer @map("2")
 
-    @@map("fact_register_semester_part_in_regis")
+  @@map("fact_register_semester_part_in_regis")
 }
 
 enum StudentStdLevel {
-    Bachelor @map("b")
-    Graduate @map("g")
+  Bachelor @map("b")
+  Graduate @map("g")
 
-    @@map("student_std_level")
+  @@map("student_std_level")
 }
 
 enum FactLeaveStatusFinal {
-    Pending   @map("pending")
-    Cancelled @map("cancelled")
-    Approved  @map("approved")
-    Rejected  @map("rejected")
+  Pending   @map("pending")
+  Cancelled @map("cancelled")
+  Approved  @map("approved")
+  Rejected  @map("rejected")
 
-    @@map("fact_leave_status_final")
+  @@map("fact_leave_status_final")
 }

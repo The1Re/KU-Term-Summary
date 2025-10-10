@@ -23,6 +23,7 @@ services:
     container_name: ku_term_summary_phpmyadmin
     restart: unless-stopped
     environment:
+      UPLOAD_LIMIT: 1G
       PMA_HOST: mysql
       PMA_PORT: 3306
       PMA_USER: myuser

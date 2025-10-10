@@ -75,9 +75,9 @@ CREATE TABLE `fact_class` (
     `classtime_id1` INTEGER NULL,
     `classtime_id2` INTEGER NULL,
     `semester_year` INTEGER NULL,
-    `semesterPart` ENUM('0', '1', '2') NULL,
+    `semester_part` ENUM('0', '1', '2') NULL,
     `sec` INTEGER NULL,
-    `secType` ENUM('Lec', 'Lab') NULL,
+    `sec_type` ENUM('Lec', 'Lab') NULL,
     `class_capacity` VARCHAR(45) NULL,
     `day_name1` VARCHAR(3) NOT NULL,
     `day_name2` VARCHAR(3) NULL,
@@ -91,7 +91,7 @@ CREATE TABLE `fact_class` (
     INDEX `idx_classtime1`(`classtime_id1`),
     INDEX `idx_classtime2`(`classtime_id2`),
     INDEX `idx_subject`(`subject_id`),
-    UNIQUE INDEX `unique_class_naja`(`subject_id`, `course_id`, `semester_year`, `semesterPart`, `sec`),
+    UNIQUE INDEX `unique_class_naja`(`subject_id`, `course_id`, `semester_year`, `semester_part`, `sec`),
     PRIMARY KEY (`class_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -107,15 +107,15 @@ CREATE TABLE `fact_leave` (
     `total_day` INTEGER NOT NULL,
     `leave_reason` TEXT NULL,
     `reject_reason` TEXT NULL,
-    `statusAdvisor` ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
-    `statusDepartHead` ENUM('not_required', 'pending', 'rejected', 'approved') NOT NULL DEFAULT 'not_required',
-    `statusDean` ENUM('not_required', 'pending', 'rejected', 'approved') NOT NULL DEFAULT 'not_required',
-    `statusFinal` ENUM('pending', 'cancelled', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+    `status_final` ENUM('pending', 'cancelled', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
     `file_path` VARCHAR(255) NULL,
     `created_at` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     `address_detail` TEXT NULL,
     `phone` VARCHAR(10) NULL,
     `email` VARCHAR(255) NULL,
+    `approve_advisor_at` TIMESTAMP(0) NULL,
+    `approve_depart_head_at` TIMESTAMP(0) NULL,
+    `approve_dean_at` TIMESTAMP(0) NULL,
 
     UNIQUE INDEX `fact_leave_id`(`fact_leave_id`),
     INDEX `advisor_teacher_id`(`advisor_id`),
@@ -198,13 +198,12 @@ CREATE TABLE `leave_type` (
 
 -- CreateTable
 CREATE TABLE `lecturer` (
-    `lecturer_id` INTEGER NOT NULL AUTO_INCREMENT,
     `teacher_id` INTEGER NOT NULL,
     `class_id` INTEGER NOT NULL,
 
     INDEX `idx_class_id`(`class_id`),
     INDEX `idx_teacher_id`(`teacher_id`),
-    PRIMARY KEY (`lecturer_id`)
+    PRIMARY KEY (`teacher_id`, `class_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -240,7 +239,7 @@ CREATE TABLE `room` (
     `building_building_Id` INTEGER NULL,
     `room_code` VARCHAR(10) NOT NULL,
     `room_capacity` DECIMAL(10, 0) NULL,
-    `roomType` ENUM('Lecture', 'Laboratory', 'Meeting') NULL,
+    `room_type` ENUM('Lecture', 'Laboratory', 'Meeting') NULL,
 
     INDEX `fk_room_building1`(`building_building_Id`),
     PRIMARY KEY (`room_Id`)
@@ -296,11 +295,9 @@ CREATE TABLE `teacher` (
     `teacher_id` INTEGER NOT NULL AUTO_INCREMENT,
     `username` VARCHAR(20) NOT NULL,
     `teacher_code` VARCHAR(10) NULL,
-    `first_name_th` VARCHAR(50) NOT NULL,
-    `title_teacher_th` VARCHAR(10) NOT NULL,
-    `last_name_th` VARCHAR(50) NOT NULL,
-    `first_name_eng` VARCHAR(50) NOT NULL,
-    `last_name_eng` VARCHAR(50) NOT NULL,
+    `teacher_name_th` VARCHAR(255) NOT NULL,
+    `teacher_name_eng` VARCHAR(255) NOT NULL,
+    `alias` VARCHAR(255) NOT NULL,
     `department_id` INTEGER NOT NULL,
     `faculty_check` INTEGER NOT NULL,
 
@@ -357,11 +354,11 @@ CREATE TABLE `fact_register` (
     `grade_character` VARCHAR(2) NULL,
     `grade_number` FLOAT NULL,
     `credit_regis` INTEGER NULL,
-    `typeRegis` ENUM('0', '1') NULL,
+    `type_regis` ENUM('0', '1') NULL,
     `study_year_in_regis` INTEGER NULL,
     `study_term_in_regis` INTEGER NULL,
     `semester_year_in_regis` INTEGER NULL,
-    `semesterPartInRegis` ENUM('0', '1', '2') NULL,
+    `semester_part_in_regis` ENUM('0', '1', '2') NULL,
     `subject_course_id` INTEGER NULL,
     `grade_label_id` INTEGER NULL,
     `credit_require_id` INTEGER NULL,
@@ -457,14 +454,14 @@ CREATE TABLE `pre_subject` (
 CREATE TABLE `student` (
     `student_id` INTEGER NOT NULL AUTO_INCREMENT,
     `student_username` VARCHAR(10) NOT NULL,
-    `stdLevel` ENUM('b', 'g') NULL,
+    `std_level` ENUM('b', 'g') NULL,
     `person_id` VARCHAR(13) NULL,
     `name_th` VARCHAR(50) NOT NULL,
     `name_eng` VARCHAR(50) NOT NULL,
-    `genderTh` ENUM('ชาย', 'หญิง') NULL,
-    `genderEng` ENUM('Male', 'Female') NULL,
-    `titleTh` ENUM('นาย', 'นางสาว', 'นาง') NOT NULL,
-    `titleEng` ENUM('Mr.', 'Mrs.', 'Miss') NOT NULL,
+    `gender_th` ENUM('ชาย', 'หญิง') NULL,
+    `gender_eng` ENUM('Male', 'Female') NULL,
+    `title_th` ENUM('นาย', 'นางสาว', 'นาง') NOT NULL,
+    `title_eng` ENUM('Mr.', 'Mrs.', 'Miss') NOT NULL,
     `tell` VARCHAR(10) NOT NULL,
     `parent_phone` VARCHAR(10) NULL,
     `email` VARCHAR(50) NOT NULL,
