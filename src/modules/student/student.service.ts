@@ -9,6 +9,11 @@ export class StudentService {
   async getStudentById(studentId: number) {
     return await this.databaseService.factStudent.findFirst({
       where: { studentId },
+      include: {
+        coursePlan: {
+          select: { totalCredit: true },
+        },
+      },
     });
   }
 
@@ -17,6 +22,13 @@ export class StudentService {
       where: {
         studentStatusId: StudentStatus.ACTIVE,
       },
+    });
+  }
+
+  async updateStudentStatus(studentId: number, studentStatusId: number) {
+    return await this.databaseService.factStudent.updateMany({
+      where: { studentId },
+      data: { studentStatusId },
     });
   }
 }
