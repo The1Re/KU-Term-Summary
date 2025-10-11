@@ -12,7 +12,7 @@ export class RegisterService {
   ) {
     return this.databaseService.factRegister.findMany({
       where: { studentId: studentId, ...whereClause },
-      orderBy: [{ studyYearInRegis: 'desc', studyTermInRegis: 'desc' }],
+      orderBy: [{ studyYearInRegis: 'desc' }, { studyTermInRegis: 'desc' }],
     });
   }
 }
