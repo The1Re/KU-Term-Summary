@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '@/core/database/database.service';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class StudentPlanService {
@@ -8,6 +8,11 @@ export class StudentPlanService {
   async getAllStudentPlan(studentId: number) {
     return this.databaseService.factStudentPlan.findMany({
       where: { studentId },
+      include: {
+        subjectCourse: {
+          include: { subject: true },
+        },
+      },
     });
   }
 }
