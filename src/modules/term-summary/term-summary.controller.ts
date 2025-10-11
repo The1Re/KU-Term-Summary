@@ -1,17 +1,28 @@
-import { Body, Controller, NotFoundException, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  NotFoundException,
+  Param,
+  Post,
+  Get,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateTermSummaryDto } from './dto/create-term-summary.dto';
 import { FactStudent } from '@prisma/client';
 import { StudentService } from '../student/student.service';
 import { StudentPlanUsecase } from '../student-plan/student-plan.usecase';
 import { StudentPlanService } from '../student-plan/student-plan.service';
+import { TermSummaryService } from './term-summary.service';
+import { TermSummaryDto } from './dto/get-all-term-summary.dto';
 
 @Controller('term-summary')
 export class TermSummaryController {
   constructor(
     private readonly studentPlanService: StudentPlanService,
     private readonly studentService: StudentService,
-    private readonly studentPlanUsecase: StudentPlanUsecase
+    private readonly studentPlanUsecase: StudentPlanUsecase,
+    private readonly termsummaryService: TermSummaryService
   ) {}
 
   @Post()
@@ -72,5 +83,42 @@ export class TermSummaryController {
     }
 
     return { message: 'Term summaries created/updated successfully' };
+  }
+
+  @Get(':studentId')
+  @ApiOperation({
+    summary: 'Get all Term Summary',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: TermSummaryDto,
+    isArray: true,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found',
+    examples: {
+      studentNotFound: {
+        summary: 'Student Not Found',
+        value: {
+          message: 'Student not found',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+    example: {
+      message: 'Internal server error',
+    },
+  })
+  async getAllTermSummary(@Param('studentId', ParseIntPipe) studentId: number) {
+    const student = await this.studentService.getStudentById(studentId);
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+    return this.termsummaryService.getTermSummary(studentId);
   }
 }
