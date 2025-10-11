@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '@/core/database/database.service';
 
 @Injectable()
-export class StudentPlanService {
+export class StudentService {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  async getAllStudentPlan(studentId: number) {
-    return this.databaseService.factStudentPlan.findMany({
+  async getStudentById(studentId: number) {
+    return await this.databaseService.factStudent.findFirst({
       where: { studentId },
     });
   }
