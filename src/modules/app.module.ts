@@ -6,7 +6,7 @@ import { DatabaseModule } from '@/core/database/database.module';
 import { StudentPlanModule } from './student-plan/student-plan.module';
 import { SubjectCourseModule } from './subject-course/subject-course.module';
 import { TermSummaryModule } from './term-summary/term-summary.module';
-
+import { TermCreditModule } from './term-credit/term-credit.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -19,6 +19,7 @@ import { TermSummaryModule } from './term-summary/term-summary.module';
     StudentPlanModule,
     SubjectCourseModule,
     TermSummaryModule,
+    TermCreditModule,
   ],
   controllers: [AppController],
 })
