@@ -5,6 +5,7 @@ import { validateEnv } from '@/core/config/env';
 import { DatabaseModule } from '@/core/database/database.module';
 import { StudentPlanModule } from './student-plan/student-plan.module';
 import { SubjectCourseModule } from './subject-course/subject-course.module';
+import { TermSummaryModule } from './term-summary/term-summary.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { SubjectCourseModule } from './subject-course/subject-course.module';
     DatabaseModule,
     StudentPlanModule,
     SubjectCourseModule,
+    TermSummaryModule,
   ],
   controllers: [AppController],
 })

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '@/core/database/database.service';
+import { StudentStatus } from '@/constants';
 
 @Injectable()
 export class StudentService {
@@ -8,6 +9,14 @@ export class StudentService {
   async getStudentById(studentId: number) {
     return await this.databaseService.factStudent.findFirst({
       where: { studentId },
+    });
+  }
+
+  async getAllStudents() {
+    return await this.databaseService.factStudent.findMany({
+      where: {
+        studentStatusId: StudentStatus.ACTIVE,
+      },
     });
   }
 }
