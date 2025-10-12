@@ -5,9 +5,10 @@ import { StudentPlanModule } from '../student-plan/student-plan.module';
 import { RegisterModule } from '../register/register.module';
 import { TermSummaryUseCase } from './term-summary.usecase';
 import { TermSummaryController } from './term-summary.controller';
+import { TermCreditModule } from '../term-credit/term-credit.module';
 
 @Module({
-  imports: [StudentModule, StudentPlanModule, RegisterModule],
+  imports: [StudentModule, StudentPlanModule, RegisterModule, TermCreditModule],
   providers: [TermSummaryService, TermSummaryUseCase],
   controllers: [TermSummaryController],
 })

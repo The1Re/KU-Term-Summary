@@ -35,14 +35,14 @@ export class StudentPlanController {
   @ApiResponse({
     status: 201,
     description: 'Success',
-    example: {
-      success: {
+    examples: {
+      Success: {
         summary: 'All created',
         value: {
           message: 'Student plan create successfully',
         },
       },
-      successWithSomeError: {
+      SuccessWithSomeError: {
         summary: 'Partial success',
         value: {
           message:
