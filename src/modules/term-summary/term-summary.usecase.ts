@@ -222,4 +222,28 @@ export class TermSummaryUseCase {
     );
     return summary;
   }
+
+  async latestTermSummary(studentId: number) {
+    const latestRegister = await this.databaseService.factRegister.findFirst({
+      where: { studentId },
+      orderBy: [{ studyYearInRegis: 'desc' }, { studyTermInRegis: 'desc' }],
+      select: {
+        studyYearInRegis: true,
+        studyTermInRegis: true,
+      },
+    });
+
+    if (!latestRegister) return null;
+
+    if (
+      latestRegister.studyYearInRegis === null ||
+      latestRegister.studyTermInRegis === null
+    ) {
+      return null;
+    }
+    return {
+      year: latestRegister.studyYearInRegis,
+      term: latestRegister.studyTermInRegis,
+    };
+  }
 }

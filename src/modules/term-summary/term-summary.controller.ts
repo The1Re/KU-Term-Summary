@@ -15,6 +15,8 @@ import { StudentPlanUsecase } from '../student-plan/student-plan.usecase';
 import { StudentPlanService } from '../student-plan/student-plan.service';
 import { TermSummaryService } from './term-summary.service';
 import { TermSummaryDto } from './dto/get-all-term-summary.dto';
+import { TermSummaryUseCase } from './term-summary.usecase';
+import { RegisterService } from '../register/register.service';
 
 @Controller('term-summary')
 export class TermSummaryController {
@@ -22,7 +24,9 @@ export class TermSummaryController {
     private readonly studentPlanService: StudentPlanService,
     private readonly studentService: StudentService,
     private readonly studentPlanUsecase: StudentPlanUsecase,
-    private readonly termsummaryService: TermSummaryService
+    private readonly termsummaryService: TermSummaryService,
+    private readonly termsummaryUsecase: TermSummaryUseCase,
+    private readonly registerService: RegisterService
   ) {}
 
   @Post()
@@ -79,7 +83,15 @@ export class TermSummaryController {
         await this.studentPlanUsecase.createStudentPlan(student.studentId);
       }
       await this.studentPlanUsecase.updateStudentPlan(student.studentId);
-      // todo: create term summary service
+      const latestTerm = await this.termsummaryUsecase.latestTermSummary(
+        student.studentId
+      );
+
+      await this.termsummaryUsecase.createOrUpdateTermSummary(
+        student.studentId,
+        latestTerm?.year ?? 1,
+        latestTerm?.term ?? 1
+      );
     }
 
     return { message: 'Term summaries created/updated successfully' };
