@@ -4,6 +4,7 @@ import {
   NotFoundException,
   Param,
   ParseIntPipe,
+  Post,
   Put,
 } from '@nestjs/common';
 import {
@@ -26,6 +27,77 @@ export class StudentPlanController {
     private readonly studentPlanService: StudentPlanService,
     private readonly studentService: StudentService
   ) {}
+
+  @Post()
+  @ApiOperation({
+    summary: 'Create a student plan for all student',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Success',
+    example: {
+      success: {
+        summary: 'All created',
+        value: {
+          message: 'Student plan create successfully',
+        },
+      },
+      successWithSomeError: {
+        summary: 'Partial success',
+        value: {
+          message:
+            'Student plan create successfully but some student got error',
+          error_student_id: [1, 2, 3],
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found',
+    examples: {
+      StudentNotFound: {
+        summary: 'Student Not Found',
+        value: {
+          message: 'Student not found',
+        },
+      },
+      CourseNotFound: {
+        summary: 'Course Not Found',
+        value: {
+          message: 'No subject courses found for this course plan',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+    example: {
+      message: 'Internal server error',
+    },
+  })
+  async createStudentPlan() {
+    const students = await this.studentService.getAllStudents();
+    const studentIds = students.map(s => s.studentId);
+    const failed: { studentId: number; reason: string }[] = [];
+    for (const studentId of studentIds) {
+      try {
+        await this.studentPlanUsecase.createStudentPlan(studentId);
+        await this.studentPlanUsecase.updateStudentPlan(studentId);
+      } catch (err) {
+        failed.push({ studentId, reason: err?.message ?? 'Unknown error' });
+      }
+    }
+    if (failed.length === 0) {
+      return { message: 'Student plan create successfully' };
+    } else {
+      return {
+        message: 'Student plan create successfully but some student got error',
+        error_student_id: failed.map(f => f.studentId),
+      };
+    }
+  }
 
   @Put(':studentId')
   @ApiOperation({
