@@ -42,13 +42,6 @@ enum StudentGenderEng {
   @@map("student_gender_eng")
 }
 
-enum FactClassSecType {
-  Lec @map("Lec")
-  Lab @map("Lab")
-
-  @@map("fact_class_sec_type")
-}
-
 enum StudentTitleTh {
   Mr  @map("นาย")
   Ms  @map("นางสาว")
@@ -94,4 +87,11 @@ enum FactLeaveStatusFinal {
   Rejected  @map("rejected")
 
   @@map("fact_leave_status_final")
+}
+
+enum FactClassSecType {
+  Lec @map("0")
+  Lab @map("1")
+
+  @@map("fact_class_sec_type")
 }

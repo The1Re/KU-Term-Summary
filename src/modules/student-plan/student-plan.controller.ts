@@ -112,7 +112,7 @@ export class StudentPlanController {
       passTerm: plan.passTerm,
       stdGrade: plan.stdGrade,
       gradeDetails: plan.gradeDetails,
-      credit: plan.subjectCourse.subject.credit,
+      credit: plan.subjectCourse.subject.subCredit.credit,
     }));
     return result;
   }

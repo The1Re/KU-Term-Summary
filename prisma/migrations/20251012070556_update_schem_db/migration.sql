@@ -18,24 +18,11 @@ CREATE TABLE `building` (
 
 -- CreateTable
 CREATE TABLE `classroom` (
-    `classroom_id` INTEGER NOT NULL AUTO_INCREMENT,
-    `class_id` INTEGER NOT NULL,
     `room_id` INTEGER NOT NULL,
+    `class_id` INTEGER NOT NULL,
 
     INDEX `idx_class_id`(`class_id`),
-    INDEX `idx_room_id`(`room_id`),
-    PRIMARY KEY (`classroom_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `classtime` (
-    `classtime_id` INTEGER NOT NULL AUTO_INCREMENT,
-    `start_time` TIME(0) NOT NULL,
-    `end_time` TIME(0) NOT NULL,
-    `time_period` VARCHAR(50) NULL,
-    `duration` DECIMAL(4, 2) NULL,
-
-    PRIMARY KEY (`classtime_id`)
+    PRIMARY KEY (`room_id`, `class_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -71,27 +58,26 @@ CREATE TABLE `dim_date` (
 CREATE TABLE `fact_class` (
     `class_id` INTEGER NOT NULL AUTO_INCREMENT,
     `subject_id` INTEGER NULL,
-    `course_id` INTEGER NOT NULL,
-    `classtime_id1` INTEGER NULL,
-    `classtime_id2` INTEGER NULL,
-    `semester_year` INTEGER NULL,
-    `semester_part` ENUM('0', '1', '2') NULL,
+    `course_id` INTEGER NULL,
     `sec` INTEGER NULL,
-    `sec_type` ENUM('Lec', 'Lab') NULL,
-    `class_capacity` VARCHAR(45) NULL,
-    `day_name1` VARCHAR(3) NOT NULL,
-    `day_name2` VARCHAR(3) NULL,
+    `sec_type` ENUM('0', '1') NULL,
+    `class_capacity` INTEGER NULL,
+    `semester_year` YEAR NULL,
+    `semester_part` ENUM('0', '1', '2') NULL,
+    `days_bit` CHAR(7) NOT NULL,
+    `classtime1` CHAR(48) NULL,
+    `classtime2` CHAR(48) NULL,
+    `class_hr` DECIMAL(6, 2) NULL,
     `created_at` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     `is_current` BOOLEAN NULL DEFAULT true,
     `effective_start_ts` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     `effective_end_ts` TIMESTAMP(0) NULL,
     `change_comment` VARCHAR(255) NULL,
 
-    INDEX `course_id`(`course_id`),
-    INDEX `idx_classtime1`(`classtime_id1`),
-    INDEX `idx_classtime2`(`classtime_id2`),
     INDEX `idx_subject`(`subject_id`),
-    UNIQUE INDEX `unique_class_naja`(`subject_id`, `course_id`, `semester_year`, `semester_part`, `sec`),
+    INDEX `idx_course`(`course_id`),
+    INDEX `idx_semester`(`semester_year`, `semester_part`),
+    UNIQUE INDEX `uq_class_identity`(`subject_id`, `course_id`, `sec`, `semester_year`, `semester_part`),
     PRIMARY KEY (`class_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -144,10 +130,10 @@ CREATE TABLE `fact_leave_subject` (
 CREATE TABLE `fact_room_usage` (
     `room_usage_id` INTEGER NOT NULL AUTO_INCREMENT,
     `date_key` INTEGER NOT NULL,
-    `class_id` INTEGER NOT NULL,
+    `class_id` INTEGER NULL,
     `room_id` INTEGER NOT NULL,
-    `teacher_id` INTEGER NOT NULL,
-    `classtime_id` INTEGER NOT NULL,
+    `teacher_id` INTEGER NULL,
+    `week` INTEGER NOT NULL,
     `created_at` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     `is_current` BOOLEAN NULL DEFAULT true,
     `effective_start_ts` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
@@ -155,11 +141,10 @@ CREATE TABLE `fact_room_usage` (
     `change_comment` VARCHAR(255) NULL,
 
     INDEX `idx_class`(`class_id`),
-    INDEX `idx_classtime`(`classtime_id`),
     INDEX `idx_date`(`date_key`),
     INDEX `idx_room`(`room_id`),
     INDEX `idx_teacher`(`teacher_id`),
-    UNIQUE INDEX `uq_room_usage_current`(`date_key`, `room_id`, `classtime_id`, `is_current`),
+    UNIQUE INDEX `uq_room_usage_current`(`date_key`, `room_id`, `is_current`),
     PRIMARY KEY (`room_usage_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -313,17 +298,6 @@ CREATE TABLE `course_plan` (
     `plan_course` VARCHAR(50) NOT NULL,
     `credit_intern` INTEGER NOT NULL,
     `total_credit` INTEGER NOT NULL,
-    `general_subject_credit` INTEGER NOT NULL,
-    `specific_subject_credit` INTEGER NOT NULL,
-    `free_subject_credit` INTEGER NOT NULL,
-    `core_subject_credit` INTEGER NOT NULL,
-    `special_subject_credit` INTEGER NOT NULL,
-    `select_subject_credit` INTEGER NOT NULL,
-    `happy_subject_credit` INTEGER NOT NULL,
-    `entrepreneurship_subject_credit` INTEGER NOT NULL,
-    `language_subject_credit` INTEGER NOT NULL,
-    `people_subject_credit` INTEGER NOT NULL,
-    `aesthetics_subject_credit` INTEGER NOT NULL,
     `internship_hours` INTEGER NULL,
     `is_visible` TINYINT NOT NULL DEFAULT 1,
 
@@ -334,9 +308,9 @@ CREATE TABLE `course_plan` (
 -- CreateTable
 CREATE TABLE `credit_require` (
     `credit_require_id` INTEGER NOT NULL AUTO_INCREMENT,
-    `subject_category_id` INTEGER NOT NULL,
     `course_plan_id` INTEGER NOT NULL,
-    `credit_subject` INTEGER NOT NULL,
+    `subject_category_id` INTEGER NOT NULL,
+    `credit_require` INTEGER NOT NULL,
 
     INDEX `fk_credit_require_course_plan1_idx`(`course_plan_id`),
     INDEX `fk_credit_require_subject_category1_idx`(`subject_category_id`),
@@ -367,8 +341,8 @@ CREATE TABLE `fact_register` (
     INDEX `fk_class_id`(`class_id`),
     INDEX `fk_credit_require`(`credit_require_id`),
     INDEX `fk_fact_register_grade_label_id`(`grade_label_id`),
-    INDEX `fk_fact_register_subject_course`(`subject_course_id`),
     INDEX `fk_student_id`(`student_id`),
+    INDEX `fk_fact_class_subject_course_id`(`subject_course_id`),
     PRIMARY KEY (`regis_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -441,13 +415,12 @@ CREATE TABLE `grade_label` (
 
 -- CreateTable
 CREATE TABLE `pre_subject` (
-    `pre_subject_id` INTEGER NOT NULL AUTO_INCREMENT,
     `previous_subject_id` INTEGER NOT NULL,
     `subject_id` INTEGER NOT NULL,
 
     INDEX `previous_subject_id_idx`(`previous_subject_id`, `subject_id`),
     INDEX `subject_id_idx`(`subject_id`),
-    PRIMARY KEY (`pre_subject_id`)
+    PRIMARY KEY (`previous_subject_id`, `subject_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -481,10 +454,11 @@ CREATE TABLE `student_status` (
 -- CreateTable
 CREATE TABLE `subject_course` (
     `subject_course_id` INTEGER NOT NULL AUTO_INCREMENT,
-    `subject_id` INTEGER NOT NULL,
     `course_plan_id` INTEGER NOT NULL,
-    `study_year` INTEGER NOT NULL,
-    `study_term` INTEGER NOT NULL,
+    `subject_id` INTEGER NOT NULL,
+    `is_require` TINYINT NOT NULL DEFAULT 1,
+    `part_year` INTEGER NOT NULL,
+    `std_term` INTEGER NOT NULL,
 
     INDEX `fk_subject_course_course_plan1_idx`(`course_plan_id`),
     INDEX `fk_subject_course_subject1_idx`(`subject_id`),
@@ -494,9 +468,13 @@ CREATE TABLE `subject_course` (
 -- CreateTable
 CREATE TABLE `subject_category` (
     `subject_category_id` INTEGER NOT NULL AUTO_INCREMENT,
-    `subject_category_name` VARCHAR(30) NOT NULL,
-    `subject_group_name` VARCHAR(50) NOT NULL,
+    `course_id` INTEGER NOT NULL,
+    `category_level` INTEGER NOT NULL,
+    `master_category` INTEGER NULL,
+    `category_name` VARCHAR(100) NOT NULL,
 
+    INDEX `fk_subject_category_course`(`course_id`),
+    INDEX `fk_subject_category_self`(`master_category`),
     PRIMARY KEY (`subject_category_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -507,10 +485,9 @@ CREATE TABLE `subject` (
     `subject_type_id` INTEGER NOT NULL,
     `subject_category_id` INTEGER NOT NULL,
     `sub_credit_id` INTEGER NOT NULL,
-    `subject_code` VARCHAR(255) NOT NULL,
+    `subject_code` VARCHAR(20) NOT NULL,
     `name_subject_thai` VARCHAR(100) NOT NULL,
     `name_subject_eng` VARCHAR(100) NOT NULL,
-    `credit` INTEGER NOT NULL,
     `is_visible` TINYINT NOT NULL DEFAULT 1,
 
     INDEX `fk_subject_course1_idx`(`course_id`),
@@ -527,16 +504,10 @@ ALTER TABLE `classroom` ADD CONSTRAINT `fk_classroom_class` FOREIGN KEY (`class_
 ALTER TABLE `classroom` ADD CONSTRAINT `fk_classroom_room` FOREIGN KEY (`room_id`) REFERENCES `room`(`room_Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `fact_class` ADD CONSTRAINT `fact_class_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `course`(`course_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_class` ADD CONSTRAINT `fact_class_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `course`(`course_id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `fact_class` ADD CONSTRAINT `fk_fact_class_classtime1` FOREIGN KEY (`classtime_id1`) REFERENCES `classtime`(`classtime_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
-
--- AddForeignKey
-ALTER TABLE `fact_class` ADD CONSTRAINT `fk_fact_class_classtime2` FOREIGN KEY (`classtime_id2`) REFERENCES `classtime`(`classtime_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
-
--- AddForeignKey
-ALTER TABLE `fact_class` ADD CONSTRAINT `fk_fact_class_subject` FOREIGN KEY (`subject_id`) REFERENCES `subject`(`subject_id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `fact_class` ADD CONSTRAINT `fk_fact_class_subject` FOREIGN KEY (`subject_id`) REFERENCES `subject`(`subject_id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `fact_leave` ADD CONSTRAINT `advisor_teacher_id_ibfk` FOREIGN KEY (`advisor_id`) REFERENCES `teacher`(`teacher_id`) ON DELETE RESTRICT ON UPDATE NO ACTION;
@@ -557,10 +528,7 @@ ALTER TABLE `fact_leave_subject` ADD CONSTRAINT `fact_register_leave-subject_ibf
 ALTER TABLE `fact_leave_subject` ADD CONSTRAINT `fact_room_usage_leave-subject_ibfk` FOREIGN KEY (`fact_room_usage_id`) REFERENCES `fact_room_usage`(`room_usage_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_room_usage` ADD CONSTRAINT `fk_room_usage_class` FOREIGN KEY (`class_id`) REFERENCES `fact_class`(`class_id`) ON DELETE NO ACTION ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `fact_room_usage` ADD CONSTRAINT `fk_room_usage_classtime` FOREIGN KEY (`classtime_id`) REFERENCES `classtime`(`classtime_id`) ON DELETE NO ACTION ON UPDATE CASCADE;
+ALTER TABLE `fact_room_usage` ADD CONSTRAINT `fk_room_usage_class` FOREIGN KEY (`class_id`) REFERENCES `fact_class`(`class_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 -- AddForeignKey
 ALTER TABLE `fact_room_usage` ADD CONSTRAINT `fk_room_usage_date` FOREIGN KEY (`date_key`) REFERENCES `dim_date`(`date_key`) ON DELETE NO ACTION ON UPDATE CASCADE;
@@ -596,7 +564,7 @@ ALTER TABLE `fact_student` ADD CONSTRAINT `fact_student_ibfk_8` FOREIGN KEY (`co
 ALTER TABLE `fact_student` ADD CONSTRAINT `fact_student_ibfk_9` FOREIGN KEY (`student_id`) REFERENCES `student`(`student_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `lecturer` ADD CONSTRAINT `fk_lecturer_class` FOREIGN KEY (`class_id`) REFERENCES `fact_class`(`class_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `lecturer` ADD CONSTRAINT `fk_lecturer_class` FOREIGN KEY (`class_id`) REFERENCES `fact_class`(`class_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 -- AddForeignKey
 ALTER TABLE `lecturer` ADD CONSTRAINT `fk_lecturer_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `teacher`(`teacher_id`) ON DELETE CASCADE ON UPDATE CASCADE;
@@ -632,10 +600,10 @@ ALTER TABLE `fact_register` ADD CONSTRAINT `fk_class_id` FOREIGN KEY (`class_id`
 ALTER TABLE `fact_register` ADD CONSTRAINT `fk_credit_require` FOREIGN KEY (`credit_require_id`) REFERENCES `credit_require`(`credit_require_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 -- AddForeignKey
-ALTER TABLE `fact_register` ADD CONSTRAINT `fk_fact_register_grade_label_id` FOREIGN KEY (`grade_label_id`) REFERENCES `grade_label`(`grade_label_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_register` ADD CONSTRAINT `fk_fact_register_subject_course` FOREIGN KEY (`subject_course_id`) REFERENCES `subject_course`(`subject_course_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 -- AddForeignKey
-ALTER TABLE `fact_register` ADD CONSTRAINT `fk_fact_register_subject_course` FOREIGN KEY (`subject_course_id`) REFERENCES `subject_course`(`subject_course_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `fact_register` ADD CONSTRAINT `fk_fact_register_grade_label_id` FOREIGN KEY (`grade_label_id`) REFERENCES `grade_label`(`grade_label_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 -- AddForeignKey
 ALTER TABLE `fact_register` ADD CONSTRAINT `fk_student_id` FOREIGN KEY (`student_id`) REFERENCES `student`(`student_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
@@ -669,6 +637,12 @@ ALTER TABLE `subject_course` ADD CONSTRAINT `fk_subject_course_course_plan1` FOR
 
 -- AddForeignKey
 ALTER TABLE `subject_course` ADD CONSTRAINT `fk_subject_course_subject1` FOREIGN KEY (`subject_id`) REFERENCES `subject`(`subject_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE `subject_category` ADD CONSTRAINT `fk_subject_category_course` FOREIGN KEY (`course_id`) REFERENCES `course`(`course_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `subject_category` ADD CONSTRAINT `fk_subject_category_self` FOREIGN KEY (`master_category`) REFERENCES `subject_category`(`subject_category_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `subject` ADD CONSTRAINT `fk_subject_course1` FOREIGN KEY (`course_id`) REFERENCES `course`(`course_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
