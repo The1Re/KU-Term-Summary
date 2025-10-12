@@ -4,5 +4,7 @@ export const calculateGPA = (grades: { grade: number; credit: number }[]) => {
     0
   );
   const totalCredits = grades.reduce((acc, { credit }) => acc + credit, 0);
-  return totalCredits > 0 ? totalPoints / totalCredits : 0;
+  const gpa = totalCredits > 0 ? totalPoints / totalCredits : 0;
+
+  return parseFloat(gpa.toFixed(2));
 };
