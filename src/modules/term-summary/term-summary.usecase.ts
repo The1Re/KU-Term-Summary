@@ -4,12 +4,14 @@ import { calculateGPA } from '@/core/utils/calculate';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { FactTermSummary, Prisma } from '@prisma/client';
 import { StudentService } from '../student/student.service';
+import { TermCreditService } from '../term-credit/term-credit.service';
 
 @Injectable()
 export class TermSummaryUseCase {
   constructor(
     private readonly databaseService: DatabaseService,
-    private readonly studentService: StudentService
+    private readonly studentService: StudentService,
+    private readonly termCreditService: TermCreditService
   ) {}
 
   async checkFollowPlan(studentId: number, year: number, term: number) {
@@ -211,8 +213,13 @@ export class TermSummaryUseCase {
 
     await this.studentService.updateStudentStatus(studentId, studentStatusId);
 
-    // todo: create term credit
-
+    await this.termCreditService.createTermCredit(
+      summary.factTermSummaryId,
+      studentId,
+      factStudent.coursePlanId,
+      studyYear,
+      studyTerm
+    );
     return summary;
   }
 }
