@@ -46,7 +46,7 @@ export class StudentPlanUsecase {
             ({
               studentId,
               subjectCourseId: subjectCourse.subjectCourseId,
-              isRequire: true, // todo: recheck this field when subjectCourse schema change
+              isRequire: Boolean(subjectCourse.isRequire),
             }) as Prisma.FactStudentPlanCreateManyInput
         ),
       }),
@@ -83,7 +83,9 @@ export class StudentPlanUsecase {
           groupRegisterBySubjectCourseId.get(plan.subjectCourseId) ?? [];
 
         const latestRegister = registers[0];
-        const isCurrentTermPass = (latestRegister.gradeNumber ?? 0) > 0;
+        const isCurrentTermPass =
+          (latestRegister.gradeNumber ?? 0) > 0 ||
+          latestRegister.gradeCharacter === 'P';
 
         const note = registers
           .reverse()
