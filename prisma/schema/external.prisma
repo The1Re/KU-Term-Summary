@@ -17,28 +17,14 @@ model Building {
 }
 
 model Classroom {
-  classroomId Int       @id @default(autoincrement()) @map("classroom_id")
-  classId     Int       @map("class_id")
-  roomId      Int       @map("room_id")
-  factClass   FactClass @relation(fields: [classId], references: [classId], onDelete: Cascade, map: "fk_classroom_class")
-  room        Room      @relation(fields: [roomId], references: [roomId], onDelete: Cascade, map: "fk_classroom_room")
+  roomId    Int       @map("room_id")
+  classId   Int       @map("class_id")
+  factClass FactClass @relation(fields: [classId], references: [classId], onDelete: Cascade, map: "fk_classroom_class")
+  room      Room      @relation(fields: [roomId], references: [roomId], onDelete: Cascade, map: "fk_classroom_room")
 
+  @@id([roomId, classId])
   @@index([classId], map: "idx_class_id")
-  @@index([roomId], map: "idx_room_id")
   @@map("classroom")
-}
-
-model Classtime {
-  classtimeId                               Int             @id @default(autoincrement()) @map("classtime_id")
-  startTime                                 DateTime        @map("start_time") @db.Time(0)
-  endTime                                   DateTime        @map("end_time") @db.Time(0)
-  timePeriod                                String?         @map("time_period") @db.VarChar(50)
-  duration                                  Decimal?        @map("duration") @db.Decimal(4, 2)
-  factClassFactClassClasstimeId1Toclasstime FactClass[]     @relation("fact_class_classtime_id1Toclasstime")
-  factClassFactClassClasstimeId2Toclasstime FactClass[]     @relation("fact_class_classtime_id2Toclasstime")
-  factRoomUsage                             FactRoomUsage[]
-
-  @@map("classtime")
 }
 
 model Department {
@@ -73,37 +59,34 @@ model DimDate {
 }
 
 model FactClass {
-  classId                                   Int                    @id @default(autoincrement()) @map("class_id")
-  subjectId                                 Int?                   @map("subject_id")
-  courseId                                  Int                    @map("course_id")
-  classtimeId1                              Int?                   @map("classtime_id1")
-  classtimeId2                              Int?                   @map("classtime_id2")
-  semesterYear                              Int?                   @map("semester_year")
-  semesterPart                              FactClassSemesterPart? @map("semester_part")
-  sec                                       Int?                   @map("sec")
-  secType                                   FactClassSecType?      @map("sec_type")
-  classCapacity                             String?                @map("class_capacity") @db.VarChar(45)
-  dayName1                                  String                 @map("day_name1") @db.VarChar(3)
-  dayName2                                  String?                @map("day_name2") @db.VarChar(3)
-  createdAt                                 DateTime               @default(now()) @map("created_at") @db.Timestamp(0)
-  isCurrent                                 Boolean?               @default(true) @map("is_current")
-  effectiveStartTs                          DateTime               @default(now()) @map("effective_start_ts") @db.Timestamp(0)
-  effectiveEndTs                            DateTime?              @map("effective_end_ts") @db.Timestamp(0)
-  changeComment                             String?                @map("change_comment") @db.VarChar(255)
-  classroom                                 Classroom[]
-  course                                    Course                 @relation(fields: [courseId], references: [courseId], onUpdate: Restrict, map: "fact_class_ibfk_1")
-  classtimeFactClassClasstimeId1Toclasstime Classtime?             @relation("fact_class_classtime_id1Toclasstime", fields: [classtimeId1], references: [classtimeId], onDelete: Restrict, onUpdate: Restrict, map: "fk_fact_class_classtime1")
-  classtimeFactClassClasstimeId2Toclasstime Classtime?             @relation("fact_class_classtime_id2Toclasstime", fields: [classtimeId2], references: [classtimeId], onDelete: Restrict, onUpdate: Restrict, map: "fk_fact_class_classtime2")
-  subject                                   Subject?               @relation(fields: [subjectId], references: [subjectId], map: "fk_fact_class_subject")
-  factRegister                              FactRegister[]
-  factRoomUsage                             FactRoomUsage[]
-  lecturer                                  Lecturer[]
+  classId          Int                    @id @default(autoincrement()) @map("class_id")
+  subjectId        Int?                   @map("subject_id")
+  courseId         Int?                   @map("course_id")
+  sec              Int?                   @map("sec")
+  secType          FactClassSecType?      @map("sec_type")
+  classCapacity    Int?                   @map("class_capacity")
+  semesterYear     Int?                   @map("semester_year") @db.Year
+  semesterPart     FactClassSemesterPart? @map("semester_part")
+  daysBit          String                 @map("days_bit") @db.Char(7)
+  classtime1       String?                @map("classtime1") @db.Char(48)
+  classtime2       String?                @map("classtime2") @db.Char(48)
+  classHr          Decimal?               @map("class_hr") @db.Decimal(6, 2)
+  createdAt        DateTime               @default(now()) @map("created_at") @db.Timestamp(0)
+  isCurrent        Boolean?               @default(true) @map("is_current")
+  effectiveStartTs DateTime               @default(now()) @map("effective_start_ts") @db.Timestamp(0)
+  effectiveEndTs   DateTime?              @map("effective_end_ts") @db.Timestamp(0)
+  changeComment    String?                @map("change_comment") @db.VarChar(255)
+  classroom        Classroom[]
+  course           Course?                @relation(fields: [courseId], references: [courseId], onDelete: NoAction, map: "fact_class_ibfk_1")
+  subject          Subject?               @relation(fields: [subjectId], references: [subjectId], onDelete: NoAction, map: "fk_fact_class_subject")
+  factRegister     FactRegister[]
+  factRoomUsage    FactRoomUsage[]
+  lecturer         Lecturer[]
 
-  @@unique([subjectId, courseId, semesterYear, semesterPart, sec], map: "unique_class_naja")
-  @@index([courseId], map: "course_id")
-  @@index([classtimeId1], map: "idx_classtime1")
-  @@index([classtimeId2], map: "idx_classtime2")
+  @@unique([subjectId, courseId, sec, semesterYear, semesterPart], map: "uq_class_identity")
   @@index([subjectId], map: "idx_subject")
+  @@index([courseId], map: "idx_course")
+  @@index([semesterYear, semesterPart], map: "idx_semester")
   @@map("fact_class")
 }
 
@@ -159,25 +142,23 @@ model FactLeaveSubject {
 model FactRoomUsage {
   roomUsageId      Int                @id @default(autoincrement()) @map("room_usage_id")
   dateKey          Int                @map("date_key")
-  classId          Int                @map("class_id")
+  classId          Int?               @map("class_id")
   roomId           Int                @map("room_id")
-  teacherId        Int                @map("teacher_id")
-  classtimeId      Int                @map("classtime_id")
+  teacherId        Int?               @map("teacher_id")
+  week             Int                @map("week")
   createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamp(0)
   isCurrent        Boolean?           @default(true) @map("is_current")
   effectiveStartTs DateTime           @default(now()) @map("effective_start_ts") @db.Timestamp(0)
   effectiveEndTs   DateTime?          @map("effective_end_ts") @db.Timestamp(0)
   changeComment    String?            @map("change_comment") @db.VarChar(255)
   factLeaveSubject FactLeaveSubject[]
-  factClass        FactClass          @relation(fields: [classId], references: [classId], onDelete: NoAction, map: "fk_room_usage_class")
-  classtime        Classtime          @relation(fields: [classtimeId], references: [classtimeId], onDelete: NoAction, map: "fk_room_usage_classtime")
+  factClass        FactClass?         @relation(fields: [classId], references: [classId], onDelete: Restrict, onUpdate: Restrict, map: "fk_room_usage_class")
   dimDate          DimDate            @relation(fields: [dateKey], references: [dateKey], onDelete: NoAction, map: "fk_room_usage_date")
   room             Room               @relation(fields: [roomId], references: [roomId], onDelete: NoAction, map: "fk_room_usage_room")
-  teacher          Teacher            @relation(fields: [teacherId], references: [teacherId], onDelete: NoAction, map: "fk_room_usage_teacher")
+  teacher          Teacher?           @relation(fields: [teacherId], references: [teacherId], onDelete: NoAction, map: "fk_room_usage_teacher")
 
-  @@unique([dateKey, roomId, classtimeId, isCurrent], map: "uq_room_usage_current")
+  @@unique([dateKey, roomId, isCurrent], map: "uq_room_usage_current")
   @@index([classId], map: "idx_class")
-  @@index([classtimeId], map: "idx_classtime")
   @@index([dateKey], map: "idx_date")
   @@index([roomId], map: "idx_room")
   @@index([teacherId], map: "idx_teacher")
@@ -228,7 +209,7 @@ model LeaveType {
 model Lecturer {
   teacherId Int       @map("teacher_id")
   classId   Int       @map("class_id")
-  factClass FactClass @relation(fields: [classId], references: [classId], onDelete: Cascade, map: "fk_lecturer_class")
+  factClass FactClass @relation(fields: [classId], references: [classId], onUpdate: Restrict, map: "fk_lecturer_class")
   teacher   Teacher   @relation(fields: [teacherId], references: [teacherId], onDelete: Cascade, map: "fk_lecturer_teacher")
 
   @@id([teacherId, classId])
@@ -302,19 +283,20 @@ model SubCredit {
 }
 
 model Course {
-  courseId              Int          @id @default(autoincrement()) @map("course_id")
-  nameCourseTh          String       @map("name_course_th") @db.VarChar(150)
-  nameCourseUse         String       @map("name_course_use") @db.VarChar(50)
-  nameCourseEng         String       @map("name_course_eng") @db.VarChar(150)
-  nameFullDegreeTh      String       @map("name_full_degree_th") @db.VarChar(150)
-  nameFullDegreeEng     String       @map("name_full_degree_eng") @db.VarChar(150)
-  nameInitialsDegreeTh  String       @map("name_initials_degree_th") @db.VarChar(100)
-  nameInitialsDegreeEng String       @map("name_initials_degree_eng") @db.VarChar(100)
-  departmentId          Int          @map("department_id")
-  department            Department   @relation(fields: [departmentId], references: [deptId], onDelete: Cascade, map: "fk_course_department")
+  courseId              Int               @id @default(autoincrement()) @map("course_id")
+  nameCourseTh          String            @map("name_course_th") @db.VarChar(150)
+  nameCourseUse         String            @map("name_course_use") @db.VarChar(50)
+  nameCourseEng         String            @map("name_course_eng") @db.VarChar(150)
+  nameFullDegreeTh      String            @map("name_full_degree_th") @db.VarChar(150)
+  nameFullDegreeEng     String            @map("name_full_degree_eng") @db.VarChar(150)
+  nameInitialsDegreeTh  String            @map("name_initials_degree_th") @db.VarChar(100)
+  nameInitialsDegreeEng String            @map("name_initials_degree_eng") @db.VarChar(100)
+  departmentId          Int               @map("department_id")
+  department            Department        @relation(fields: [departmentId], references: [deptId], onDelete: Cascade, map: "fk_course_department")
   coursePlan            CoursePlan[]
   factClass             FactClass[]
   subject               Subject[]
+  subjectCategory       SubjectCategory[]
 
   @@index([departmentId], map: "fk_course_department")
   @@map("course")

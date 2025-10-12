@@ -20,13 +20,13 @@ export class TermSummaryUseCase {
         OR: [
           {
             subjectCourse: {
-              studyYear: { lt: year },
+              partYear: { lt: year },
             },
           },
           {
             subjectCourse: {
-              studyYear: year,
-              studyTerm: {
+              partYear: year,
+              stdTerm: {
                 lte: term,
               },
             },

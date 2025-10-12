@@ -1,26 +1,15 @@
 model CoursePlan {
-  coursePlanId                  Int             @id @default(autoincrement()) @map("course_plan_id")
-  courseId                      Int             @map("course_id")
-  planCourse                    String          @map("plan_course") @db.VarChar(50)
-  creditIntern                  Int             @map("credit_intern")
-  totalCredit                   Int             @map("total_credit")
-  generalSubjectCredit          Int             @map("general_subject_credit")
-  specificSubjectCredit         Int             @map("specific_subject_credit")
-  freeSubjectCredit             Int             @map("free_subject_credit")
-  coreSubjectCredit             Int             @map("core_subject_credit")
-  specialSubjectCredit          Int             @map("special_subject_credit")
-  selectSubjectCredit           Int             @map("select_subject_credit")
-  happySubjectCredit            Int             @map("happy_subject_credit")
-  entrepreneurshipSubjectCredit Int             @map("entrepreneurship_subject_credit")
-  languageSubjectCredit         Int             @map("language_subject_credit")
-  peopleSubjectCredit           Int             @map("people_subject_credit")
-  aestheticsSubjectCredit       Int             @map("aesthetics_subject_credit")
-  internshipHours               Int?            @map("internship_hours")
-  isVisible                     Int             @default(1) @map("is_visible") @db.TinyInt
-  course                        Course          @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_course_plan_course1")
-  creditRequire                 CreditRequire[]
-  factStudent                   FactStudent[]
-  subjectCourse                 SubjectCourse[]
+  coursePlanId    Int             @id @default(autoincrement()) @map("course_plan_id")
+  courseId        Int             @map("course_id")
+  planCourse      String          @map("plan_course") @db.VarChar(50)
+  creditIntern    Int             @map("credit_intern")
+  totalCredit     Int             @map("total_credit")
+  internshipHours Int?            @map("internship_hours")
+  isVisible       Int             @default(1) @map("is_visible") @db.TinyInt
+  course          Course          @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_course_plan_course1")
+  creditRequire   CreditRequire[]
+  factStudent     FactStudent[]
+  subjectCourse   SubjectCourse[]
 
   @@index([courseId], map: "fk_course_plan_course1_idx")
   @@map("course_plan")
@@ -28,9 +17,9 @@ model CoursePlan {
 
 model CreditRequire {
   creditRequireId   Int              @id @default(autoincrement()) @map("credit_require_id")
-  subjectCategoryId Int              @map("subject_category_id")
   coursePlanId      Int              @map("course_plan_id")
-  creditSubject     Int              @map("credit_subject")
+  subjectCategoryId Int              @map("subject_category_id")
+  creditRequire     Int              @map("credit_require")
   coursePlan        CoursePlan       @relation(fields: [coursePlanId], references: [coursePlanId], onDelete: NoAction, onUpdate: NoAction, map: "fk_credit_require_course_plan1")
   subjectCategory   SubjectCategory  @relation(fields: [subjectCategoryId], references: [subjectCategoryId], onDelete: NoAction, onUpdate: NoAction, map: "fk_credit_require_subject_category1")
   factRegister      FactRegister[]
@@ -63,15 +52,15 @@ model FactRegister {
   factLeaveSubject    FactLeaveSubject[]
   factClass           FactClass?                       @relation(fields: [classId], references: [classId], onDelete: Restrict, onUpdate: Restrict, map: "fk_class_id")
   creditRequire       CreditRequire?                   @relation(fields: [creditRequireId], references: [creditRequireId], onDelete: Restrict, onUpdate: Restrict, map: "fk_credit_require")
+  subjectCourse       SubjectCourse?                   @relation(fields: [subjectCourseId], references: [subjectCourseId], onDelete: Restrict, onUpdate: Restrict, map: "fk_fact_register_subject_course")
   gradeLabel          GradeLabel?                      @relation(fields: [gradeLabelId], references: [gradeLabelId], onDelete: Restrict, onUpdate: Restrict, map: "fk_fact_register_grade_label_id")
-  subjectCourse       SubjectCourse?                   @relation(fields: [subjectCourseId], references: [subjectCourseId], onDelete: Restrict, map: "fk_fact_register_subject_course")
   student             Student?                         @relation(fields: [studentId], references: [studentId], onDelete: Restrict, onUpdate: Restrict, map: "fk_student_id")
 
   @@index([classId], map: "fk_class_id")
   @@index([creditRequireId], map: "fk_credit_require")
   @@index([gradeLabelId], map: "fk_fact_register_grade_label_id")
-  @@index([subjectCourseId], map: "fk_fact_register_subject_course")
   @@index([studentId], map: "fk_student_id")
+  @@index([subjectCourseId], map: "fk_fact_class_subject_course_id")
   @@map("fact_register")
 }
 
@@ -149,12 +138,12 @@ model GradeLabel {
 }
 
 model PreSubject {
-  preSubjectId                                Int     @id @default(autoincrement()) @map("pre_subject_id")
   previousSubjectId                           Int     @map("previous_subject_id")
   subjectId                                   Int     @map("subject_id")
   subjectPreSubjectSubjectIdTosubject         Subject @relation("pre_subject_subject_idTosubject", fields: [subjectId], references: [subjectId], onDelete: Cascade, map: "pre_subject_ibfk_1")
   subjectPreSubjectPreviousSubjectIdTosubject Subject @relation("pre_subject_previous_subject_idTosubject", fields: [previousSubjectId], references: [subjectId], onDelete: Cascade, map: "pre_subject_ibfk_2")
 
+  @@id([previousSubjectId, subjectId])
   @@index([previousSubjectId, subjectId], map: "previous_subject_id_idx")
   @@index([subjectId], map: "subject_id_idx")
   @@map("pre_subject")
@@ -191,10 +180,11 @@ model StudentStatus {
 
 model SubjectCourse {
   subjectCourseId Int               @id @default(autoincrement()) @map("subject_course_id")
-  subjectId       Int               @map("subject_id")
   coursePlanId    Int               @map("course_plan_id")
-  studyYear       Int               @map("study_year")
-  studyTerm       Int               @map("study_term")
+  subjectId       Int               @map("subject_id")
+  isRequire       Int               @default(1) @map("is_require") @db.TinyInt
+  partYear        Int               @map("part_year")
+  stdTerm         Int               @map("std_term")
   factRegister    FactRegister[]
   factStudentPlan FactStudentPlan[]
   coursePlan      CoursePlan        @relation(fields: [coursePlanId], references: [coursePlanId], onDelete: NoAction, onUpdate: NoAction, map: "fk_subject_course_course_plan1")
@@ -206,12 +196,19 @@ model SubjectCourse {
 }
 
 model SubjectCategory {
-  subjectCategoryId   Int             @id @default(autoincrement()) @map("subject_category_id")
-  subjectCategoryName String          @map("subject_category_name") @db.VarChar(30)
-  subjectGroupName    String          @map("subject_group_name") @db.VarChar(50)
-  creditRequire       CreditRequire[]
-  subject             Subject[]
+  subjectCategoryId    Int               @id @default(autoincrement()) @map("subject_category_id")
+  courseId             Int               @map("course_id")
+  categoryLevel        Int               @map("category_level")
+  masterCategory       Int?              @map("master_category")
+  categoryName         String            @map("category_name") @db.VarChar(100)
+  creditRequire        CreditRequire[]
+  subject              Subject[]
+  course               Course            @relation(fields: [courseId], references: [courseId], onDelete: Cascade, map: "fk_subject_category_course")
+  subjectCategory      SubjectCategory?  @relation("subject_categoryTosubject_category", fields: [masterCategory], references: [subjectCategoryId], onDelete: Cascade, map: "fk_subject_category_self")
+  otherSubjectCategory SubjectCategory[] @relation("subject_categoryTosubject_category")
 
+  @@index([courseId], map: "fk_subject_category_course")
+  @@index([masterCategory], map: "fk_subject_category_self")
   @@map("subject_category")
 }
 
@@ -221,10 +218,9 @@ model Subject {
   subjectTypeId                                  Int             @map("subject_type_id")
   subjectCategoryId                              Int             @map("subject_category_id")
   subCreditId                                    Int             @map("sub_credit_id")
-  subjectCode                                    String          @map("subject_code") @db.VarChar(255)
+  subjectCode                                    String          @map("subject_code") @db.VarChar(20)
   nameSubjectThai                                String          @map("name_subject_thai") @db.VarChar(100)
   nameSubjectEng                                 String          @map("name_subject_eng") @db.VarChar(100)
-  credit                                         Int             @map("credit")
   isVisible                                      Int             @default(1) @map("is_visible") @db.TinyInt
   factClass                                      FactClass[]
   preSubjectPreSubjectSubjectIdTosubject         PreSubject[]    @relation("pre_subject_subject_idTosubject")
