@@ -1,0 +1,12 @@
+node_modules
+.vscode
+.husky
+.git
+coverage
+.gitignore
+.prettierrc
+*.md
+eslint.config.js
+dist
+.env*
+.DS_Store
