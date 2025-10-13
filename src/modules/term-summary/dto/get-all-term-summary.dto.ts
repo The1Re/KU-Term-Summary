@@ -53,10 +53,11 @@ export class TermSummaryDto
   semesterYearInTerm: number;
 
   @ApiProperty({
-    example: 'ภาคต้น',
-    description: 'ส่วนของภาคการศึกษาในมิติ Term (เช่น ภาคต้น/ภาคปลาย/ฤดูร้อน)',
+    example: '1',
+    description:
+      'ส่วนของภาคการศึกษาในมิติ Term (เช่น ภาคต้น=1/ภาคปลาย=2/ฤดูร้อน=3)',
   })
-  semesterPartInTerm: string;
+  semesterPartInTerm: number;
 
   @ApiPropertyOptional({
     example: 2,

@@ -159,7 +159,7 @@ export class TermSummaryUseCase {
       studyYear: studyYear,
       studyTerm: studyTerm,
       semesterYearInTerm: registerInTerm[0].semesterYearInRegis!,
-      semesterPartInTerm: registerInTerm[0].semesterPartInRegis!,
+      semesterPartInTerm: studyTerm,
       creditAll: creditAll,
       creditTerm: creditTerm,
       gpa: calculateGPA(
