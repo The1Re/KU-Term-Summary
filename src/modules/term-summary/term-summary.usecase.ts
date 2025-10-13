@@ -3,7 +3,7 @@ import { MainSubject } from '@/constants/mainSubject';
 import { DatabaseService } from '@/core/database/database.service';
 import { calculateGPA } from '@/core/utils/calculate';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { FactTermSummary, Prisma } from '@prisma/client';
+import { FactTermCredit, FactTermSummary, Prisma } from '@prisma/client';
 import { StudentService } from '../student/student.service';
 import { TermCreditService } from '../term-credit/term-credit.service';
 
@@ -56,7 +56,8 @@ export class TermSummaryUseCase {
     coursePlanId: number,
     creditAll: number,
     year: number,
-    term: number
+    term: number,
+    termCredit: FactTermCredit[]
   ) {
     const coursePlan = await this.databaseService.coursePlan.findUnique({
       where: { coursePlanId },
@@ -65,6 +66,18 @@ export class TermSummaryUseCase {
     const creditIntern = coursePlan?.creditIntern ?? 0;
     const canGoCoop = creditAll >= creditIntern;
     if (!canGoCoop) return false;
+
+    if (!termCredit || termCredit.length === 0) {
+      return false;
+    }
+
+    const allCategoriesMet = termCredit.every(tc => {
+      const required = tc.creditRequire_ ?? 0;
+      const passed = tc.creditPass ?? 0;
+      return passed >= required;
+    });
+
+    if (!allCategoriesMet) return false;
 
     const isFollowPlan = await this.checkFollowPlan(studentId, year, term);
     if (isFollowPlan) {
@@ -184,13 +197,7 @@ export class TermSummaryUseCase {
         registers.map(r => ({ grade: r.gradeNumber!, credit: r.creditRegis! }))
       ),
       isFollowPlan: await this.checkFollowPlan(studentId, studyYear, studyTerm),
-      isCoopEligible: await this.checkIsEligibleForCoop(
-        studentId,
-        factStudent.coursePlanId,
-        creditAll,
-        studyYear,
-        studyTerm
-      ),
+      isCoopEligible: false,
       teacher: {
         connect: { teacherId: factStudent.teacherId },
       },
@@ -219,7 +226,6 @@ export class TermSummaryUseCase {
     }
 
     const totalCredit = factStudent.coursePlan.totalCredit ?? 0;
-
     const studentStatusId = await this.checkStudentStatus(
       studentId,
       totalCredit,
@@ -229,13 +235,28 @@ export class TermSummaryUseCase {
 
     await this.studentService.updateStudentStatus(studentId, studentStatusId);
 
-    await this.termCreditService.createTermCredit(
+    const termCredits = await this.termCreditService.createTermCredit(
       summary.factTermSummaryId,
       studentId,
       factStudent.coursePlanId,
       studyYear,
       studyTerm
     );
+
+    const isCoopEligible = await this.checkIsEligibleForCoop(
+      studentId,
+      factStudent.coursePlanId,
+      summary.creditAll,
+      studyYear,
+      studyTerm,
+      termCredits
+    );
+
+    summary = await this.databaseService.factTermSummary.update({
+      where: { factTermSummaryId: summary.factTermSummaryId },
+      data: { isCoopEligible: isCoopEligible },
+    });
+
     return summary;
   }
 
