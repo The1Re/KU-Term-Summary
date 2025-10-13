@@ -15,4 +15,14 @@ export class RegisterService {
       orderBy: [{ studyYearInRegis: 'desc' }, { studyTermInRegis: 'desc' }],
     });
   }
+
+  async getLastestRegistForSubjectCourse(
+    studentId: number,
+    subjectCourseId: number
+  ) {
+    return await this.databaseService.factRegister.findFirst({
+      where: { studentId, subjectCourseId },
+      orderBy: [{ studyYearInRegis: 'desc' }, { studyTermInRegis: 'desc' }],
+    });
+  }
 }

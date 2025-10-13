@@ -3,7 +3,6 @@ import {
   Get,
   NotFoundException,
   Param,
-  ParseIntPipe,
   Post,
   Put,
 } from '@nestjs/common';
@@ -18,6 +17,7 @@ import { StudentPlanUsecase } from './student-plan.usecase';
 import { StudentPlanService } from './student-plan.service';
 import { StudentService } from '../student/student.service';
 import { StudentPlanDto } from './dto/student-plan.dto';
+import { StudentPlanWithLast } from './types/student-plan.types';
 
 @Controller('/student-plans')
 @ApiTags('Student Plans')
@@ -47,7 +47,7 @@ export class StudentPlanController {
         value: {
           message:
             'Student plan create successfully but some student got error',
-          error_student_id: [1, 2, 3],
+          error_student_id: ['6520501111', '6520501112', '6520501113'],
         },
       },
     },
@@ -94,12 +94,16 @@ export class StudentPlanController {
     } else {
       return {
         message: 'Student plan create successfully but some student got error',
-        error_student_id: failed.map(f => f.studentId),
+        error_student_id: await Promise.all(
+          failed.map(
+            async f => await this.studentService.getStudentById(f.studentId)
+          )
+        ),
       };
     }
   }
 
-  @Put(':studentId')
+  @Put(':studentCode')
   @ApiOperation({
     summary: 'Create or change a student plan',
   })
@@ -135,13 +139,18 @@ export class StudentPlanController {
       message: 'Internal server error',
     },
   })
-  async changeStudentPlan(@Param('studentId', ParseIntPipe) studentId: number) {
-    await this.studentPlanUsecase.createStudentPlan(studentId);
-    await this.studentPlanUsecase.updateStudentPlan(studentId);
+  async changeStudentPlan(@Param('studentCode') studentCode: string) {
+    const student =
+      await this.studentService.getStudentByStudentUsername(studentCode);
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+    await this.studentPlanUsecase.createStudentPlan(student.studentId);
+    await this.studentPlanUsecase.updateStudentPlan(student.studentId);
     return { message: 'Student plan updated successfully' };
   }
 
-  @Get(':studentId')
+  @Get(':studentCode')
   @ApiOperation({
     summary: 'Get all student plan',
   })
@@ -164,27 +173,37 @@ export class StudentPlanController {
     },
   })
   async getStudentPlan(
-    @Param('studentId', ParseIntPipe) studentId: number
+    @Param('studentCode') studentCode: string
   ): Promise<StudentPlanDto[]> {
-    const student = await this.studentService.getStudentById(studentId);
+    const student =
+      await this.studentService.getStudentByStudentUsername(studentCode);
     if (!student) {
       throw new NotFoundException('Student not found');
     }
-    const studentPlans =
-      await this.studentPlanService.getAllStudentPlan(studentId);
+    const studentPlans: StudentPlanWithLast[] =
+      await this.studentPlanService.getAllStudentPlan(student.studentId);
 
     const result: StudentPlanDto[] = studentPlans.map(plan => ({
       factStudentPlanId: plan.factStudentPlanId,
       studentId: plan.studentId,
+      studentUsername: studentCode,
       subjectCourseId: plan.subjectCourseId,
       gradeLabelId: plan.gradeLabelId,
-      isRequire: plan.isRequire,
       isPass: plan.isPass,
       passYear: plan.passYear,
       passTerm: plan.passTerm,
       stdGrade: plan.stdGrade,
       gradeDetails: plan.gradeDetails,
-      credit: plan.subjectCourse.subject.subCredit.credit,
+      subject: {
+        subjectId: plan.subjectCourse.subject.subjectId,
+        subjectCategoryId: plan.subjectCourse.subject.subjectCategoryId,
+        subjectCode: plan.subjectCourse.subject.subjectCode,
+        nameSubjectThai: plan.subjectCourse.subject.nameSubjectThai,
+        nameSubjectEng: plan.subjectCourse.subject.nameSubjectEng,
+        categoryName: plan.subjectCourse.subject.subjectCategory.categoryName,
+      },
+      lastRegisterYear: plan.lastRegisterYear,
+      lastRegisterTerm: plan.lastRegisterTerm,
     }));
     return result;
   }

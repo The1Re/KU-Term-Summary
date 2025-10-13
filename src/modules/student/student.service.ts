@@ -17,6 +17,17 @@ export class StudentService {
     });
   }
 
+  async getStudentByStudentUsername(studentUsername: string) {
+    return await this.databaseService.factStudent.findFirst({
+      where: { student: { studentUsername } },
+      include: {
+        coursePlan: {
+          select: { totalCredit: true },
+        },
+      },
+    });
+  }
+
   async getAllStudents() {
     return await this.databaseService.factStudent.findMany({
       where: {

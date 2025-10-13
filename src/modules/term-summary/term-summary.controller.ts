@@ -5,7 +5,6 @@ import {
   Param,
   Post,
   Get,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateTermSummaryDto } from './dto/create-term-summary.dto';
@@ -16,7 +15,6 @@ import { StudentPlanService } from '../student-plan/student-plan.service';
 import { TermSummaryService } from './term-summary.service';
 import { TermSummaryDto } from './dto/get-all-term-summary.dto';
 import { TermSummaryUseCase } from './term-summary.usecase';
-import { RegisterService } from '../register/register.service';
 
 @Controller('term-summary')
 export class TermSummaryController {
@@ -25,8 +23,7 @@ export class TermSummaryController {
     private readonly studentService: StudentService,
     private readonly studentPlanUsecase: StudentPlanUsecase,
     private readonly termsummaryService: TermSummaryService,
-    private readonly termsummaryUsecase: TermSummaryUseCase,
-    private readonly registerService: RegisterService
+    private readonly termsummaryUsecase: TermSummaryUseCase
   ) {}
 
   @Post()
@@ -47,7 +44,7 @@ export class TermSummaryController {
       studentNotFound: {
         summary: 'Student Not Found',
         value: {
-          message: 'Student with ID 1 not found',
+          message: 'Student with code 6520501234 not found',
         },
       },
     },
@@ -62,11 +59,12 @@ export class TermSummaryController {
   @ApiBody({ required: false, type: CreateTermSummaryDto })
   async createTermSummary(@Body() body?: CreateTermSummaryDto) {
     let students: FactStudent[] = [];
-    if (body?.studentIds) {
-      for (const id of body.studentIds) {
-        const student = await this.studentService.getStudentById(id);
+    if (body?.studentCodes) {
+      for (const code of body.studentCodes) {
+        const student =
+          await this.studentService.getStudentByStudentUsername(code);
         if (!student) {
-          throw new NotFoundException(`Student with ID ${id} not found`);
+          throw new NotFoundException(`Student with code ${code} not found`);
         }
         students.push(student);
       }
@@ -97,7 +95,7 @@ export class TermSummaryController {
     return { message: 'Term summaries created/updated successfully' };
   }
 
-  @Get(':studentId')
+  @Get(':studentCode')
   @ApiOperation({
     summary: 'Get all Term Summary',
   })
@@ -126,11 +124,12 @@ export class TermSummaryController {
       message: 'Internal server error',
     },
   })
-  async getAllTermSummary(@Param('studentId', ParseIntPipe) studentId: number) {
-    const student = await this.studentService.getStudentById(studentId);
+  async getAllTermSummary(@Param('studentCode') studentCode: string) {
+    const student =
+      await this.studentService.getStudentByStudentUsername(studentCode);
     if (!student) {
       throw new NotFoundException('Student not found');
     }
-    return this.termsummaryService.getTermSummary(studentId);
+    return this.termsummaryService.getTermSummary(student.studentId);
   }
 }
