@@ -11,4 +11,11 @@ export class TermSummaryService {
       orderBy: [{ studyYear: 'desc' }, { studyTerm: 'desc' }],
     });
   }
+
+  async getlatestTermSummary(studentId: number) {
+    return await this.databaseService.factTermSummary.findFirst({
+      where: { studentId },
+      orderBy: [{ studyYear: 'desc' }, { studyTerm: 'desc' }],
+    });
+  }
 }

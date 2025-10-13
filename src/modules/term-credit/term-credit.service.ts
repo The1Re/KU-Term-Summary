@@ -102,7 +102,7 @@ export class TermCreditService {
       },
     });
 
-    await this.databaseService.$transaction(
+    const transactionResult = await this.databaseService.$transaction(
       subjectCategoryWithCredits.map(item => {
         const existingRecord = existingRecords.find(
           record => record.creditRequireId === item.creditRequireId
@@ -134,5 +134,12 @@ export class TermCreditService {
         }
       })
     );
+    return transactionResult;
+  }
+
+  async getTermCreditByTermSummaryId(termsummaryId: number) {
+    return await this.databaseService.factTermCredit.findMany({
+      where: { factTermSummaryId: termsummaryId },
+    });
   }
 }
