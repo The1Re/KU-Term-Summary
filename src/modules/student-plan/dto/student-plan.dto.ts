@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { FactStudentPlan } from '@prisma/client';
+import { SubjectDto } from './subject.dto';
 
-export class StudentPlanDto implements FactStudentPlan {
+export class StudentPlanDto implements Omit<FactStudentPlan, 'isRequire'> {
   @ApiProperty({
     example: 1,
     description: 'The unique identifier for the student plan record',
@@ -15,6 +16,12 @@ export class StudentPlanDto implements FactStudentPlan {
   studentId: number;
 
   @ApiProperty({
+    example: '6520509999',
+    description: 'The student code (username)',
+  })
+  studentUsername: string;
+
+  @ApiProperty({
     example: 1,
     description: 'The unique identifier for the subject course record',
   })
@@ -25,12 +32,6 @@ export class StudentPlanDto implements FactStudentPlan {
     description: 'The unique identifier for the grade label record',
   })
   gradeLabelId: number | null;
-
-  @ApiProperty({
-    example: true,
-    description: 'Indicates if the subject course is required',
-  })
-  isRequire: boolean;
 
   @ApiProperty({
     example: true,
@@ -65,10 +66,25 @@ export class StudentPlanDto implements FactStudentPlan {
   })
   gradeDetails: string | null;
 
-  // extra for response
   @ApiProperty({
-    example: 3,
-    description: 'The credit value of the subject course',
+    type: SubjectDto,
+    description: 'The subject details associated with the student plan',
   })
-  credit: number;
+  subject: SubjectDto;
+
+  @ApiProperty({
+    example: 2025,
+    description:
+      'Last registered study year for this subject by the student (null if never registered)',
+    required: false,
+  })
+  lastRegisterYear?: number | null;
+
+  @ApiProperty({
+    example: 2,
+    description:
+      'Last registered study term for this subject by the student (null if never registered)',
+    required: false,
+  })
+  lastRegisterTerm?: number | null;
 }

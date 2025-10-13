@@ -10,6 +10,9 @@ export class TermSummaryDto
   @ApiProperty({ example: 186, description: 'รหัสนักศึกษา (FK ไป student)' })
   studentId: number;
 
+  @ApiProperty({ example: '6520501234', description: 'รหัสนักศึกษา' })
+  studentUsername: string;
+
   @ApiProperty({
     example: 7,
     description: 'รหัสอาจารย์ที่ปรึกษา (FK ไป teacher)',
@@ -53,7 +56,7 @@ export class TermSummaryDto
   semesterYearInTerm: number;
 
   @ApiProperty({
-    example: '1',
+    example: 1,
     description:
       'ส่วนของภาคการศึกษาในมิติ Term (เช่น ภาคต้น=1/ภาคปลาย=2/ฤดูร้อน=3)',
   })

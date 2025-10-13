@@ -2,10 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateTermSummaryDto {
   @ApiProperty({
-    example: [1, 2, 3],
-    description: 'list ของ id นักศึกษา',
+    example: ['6520501234', '6520505678'],
+    description: 'list ของ รหัสนักศึกษา',
     required: false,
-    type: [Number],
+    type: [String],
   })
-  studentIds?: number[];
+  studentCodes?: string[];
 }
