@@ -128,10 +128,14 @@ export class TermSummaryUseCase {
           },
         ],
       },
-      orderBy: {
-        studyYearInRegis: 'desc',
-        studyTermInRegis: 'desc',
-      },
+      orderBy: [
+        {
+          studyYearInRegis: 'desc',
+        },
+        {
+          studyTermInRegis: 'desc',
+        },
+      ],
     });
 
     if (registers.length === 0) return null;
