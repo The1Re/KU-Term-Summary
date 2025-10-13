@@ -1,4 +1,5 @@
 import { StudentStatus } from '@/constants';
+import { MainSubject } from '@/constants/mainSubject';
 import { DatabaseService } from '@/core/database/database.service';
 import { calculateGPA } from '@/core/utils/calculate';
 import { Injectable, NotFoundException } from '@nestjs/common';
@@ -30,6 +31,17 @@ export class TermSummaryUseCase {
               partYear: year,
               stdTerm: {
                 lte: term,
+              },
+            },
+          },
+          {
+            subjectCourse: {
+              subject: {
+                subjectCategory: {
+                  categoryName: {
+                    in: [MainSubject.CORE, MainSubject.SPECIAL],
+                  },
+                },
               },
             },
           },
