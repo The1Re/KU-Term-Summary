@@ -10,7 +10,9 @@ export class StudentPlanService {
       where: { studentId },
       include: {
         subjectCourse: {
-          include: { subject: { include: { subCredit: true } } },
+          include: {
+            subject: { include: { subCredit: true, subjectCategory: true } },
+          },
         },
       },
     });
