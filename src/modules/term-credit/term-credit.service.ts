@@ -13,52 +13,74 @@ export class TermCreditService {
     year: number,
     term: number
   ) {
-    const subjectCategory = await this.databaseService.creditRequire.findMany({
-      where: { coursePlanId },
-      select: {
-        creditRequireId: true,
-        subjectCategoryId: true,
-        creditRequire: true,
-      },
-    });
+    const [subjectCategory, result] = await Promise.all([
+      this.databaseService.creditRequire.findMany({
+        where: { coursePlanId },
+        include: { subjectCategory: true },
+      }),
+      this.databaseService.$queryRaw<
+        Array<{
+          subjectCategoryId: number;
+          totalCredit: number;
+          avgGrade: number;
+        }>
+      >`
+        WITH RECURSIVE category_hierarchy AS (
+          SELECT 
+            sc.subject_category_id, sc.subject_category_id AS root_category_id, sc.master_category
+          FROM subject_category sc
 
-    const result = await this.databaseService.$queryRaw<
-      Array<{
-        subjectCategoryId: number;
-        totalCredit: number;
-        avgGrade: number;
-      }>
-    >`
-      SELECT
-          cr.subject_category_id AS subjectCategoryId,
-          SUM(subc.credit) AS totalCredit,
-          CASE
-            WHEN SUM(subc.credit) > 0
-            THEN SUM(subc.credit * sub.grade) / SUM(subc.credit)
-            ELSE 0
-          END AS avgGrade
-      FROM
-          credit_require AS cr
-      NATURAL JOIN subject AS s
-      NATURAL JOIN sub_credit AS subc
-      INNER JOIN (
-            SELECT 
-              sc.subject_id AS subject_id,
-              fsp.std_grade AS grade
-            FROM subject_course AS sc
-            NATURAL JOIN fact_student_plan AS fsp
-            WHERE 
-              fsp.student_id = ${studentId} AND
-              fsp.is_pass = TRUE AND
-              (
-                    fsp.pass_year < ${year} OR
-                      (fsp.pass_year = ${year} AND fsp.pass_term <= ${term})
+          UNION ALL
+
+          SELECT 
+            c.subject_category_id, ch.root_category_id, c.master_category
+          FROM subject_category c
+          INNER JOIN category_hierarchy ch ON c.master_category = ch.subject_category_id
+        ),
+        category_credit AS (
+          SELECT
+              cr.subject_category_id,
+              SUM(subc.credit) AS totalCredit,
+              CASE
+                WHEN SUM(subc.credit) > 0
+                THEN SUM(subc.credit * sub.grade) / SUM(subc.credit)
+                ELSE NULL
+              END AS avgGrade
+          FROM credit_require AS cr
+          NATURAL JOIN subject AS s
+          NATURAL JOIN sub_credit AS subc
+          INNER JOIN (
+                SELECT 
+                  sc.subject_id,
+                  fsp.std_grade AS grade
+                FROM subject_course AS sc
+                NATURAL JOIN fact_student_plan AS fsp
+                WHERE 
+                  fsp.student_id = ${studentId}
+                  AND fsp.is_pass = TRUE
+                  AND (
+                    fsp.pass_year < ${year}
+                    OR (fsp.pass_year = ${year} AND fsp.pass_term <= ${term})
                   )
-          ) AS sub ON sub.subject_id = s.subject_id
-      WHERE
-          cr.course_plan_id = ${coursePlanId}
-      GROUP BY cr.subject_category_id
-    `;
+            ) AS sub ON sub.subject_id = s.subject_id
+          WHERE cr.course_plan_id = ${coursePlanId}
+          GROUP BY cr.subject_category_id
+        )
+        SELECT
+          ch.root_category_id AS subjectCategoryId,
+          SUM(cc.totalCredit) AS totalCredit,
+          CASE 
+            WHEN SUM(cc.totalCredit) > 0
+            THEN SUM(cc.totalCredit * cc.avgGrade) / SUM(cc.totalCredit)
+            ELSE NULL
+          END AS avgGrade
+        FROM category_hierarchy ch
+        LEFT JOIN category_credit cc
+          ON ch.subject_category_id = cc.subject_category_id
+        GROUP BY ch.root_category_id
+        ORDER BY ch.root_category_id;
+      `,
+    ]);
 
     const subjectCategoryWithCredits = subjectCategory.map(item => {
       const found = result.find(
@@ -71,18 +93,46 @@ export class TermCreditService {
       };
     });
 
-    await this.databaseService.$transaction([
-      this.databaseService.factTermCredit.createMany({
-        data: subjectCategoryWithCredits.map(item => {
-          return {
-            factTermSummaryId: termSummaryId,
-            creditPass: item.totalCredit,
-            grade: item.avgGrade,
-            creditRequire_: item.creditRequire,
-            creditRequireId: item.creditRequireId,
-          } as Prisma.FactTermCreditCreateManyInput;
-        }),
-      }),
-    ]);
+    const existingRecords = await this.databaseService.factTermCredit.findMany({
+      where: {
+        factTermSummaryId: termSummaryId,
+        creditRequireId: {
+          in: subjectCategoryWithCredits.map(item => item.creditRequireId),
+        },
+      },
+    });
+
+    await this.databaseService.$transaction(
+      subjectCategoryWithCredits.map(item => {
+        const existingRecord = existingRecords.find(
+          record => record.creditRequireId === item.creditRequireId
+        );
+
+        if (existingRecord) {
+          return this.databaseService.factTermCredit.update({
+            where: {
+              factTermCredit: existingRecord.factTermCredit,
+            },
+            data: {
+              creditPass: item.totalCredit,
+              grade: item.avgGrade,
+              creditRequire_: item.creditRequire,
+            },
+          });
+        } else {
+          return this.databaseService.factTermCredit.create({
+            data: {
+              factTermSummary: {
+                connect: { factTermSummaryId: termSummaryId },
+              },
+              creditPass: item.totalCredit,
+              grade: item.avgGrade,
+              creditRequire_: item.creditRequire,
+              creditRequireId: item.creditRequireId,
+            } as Prisma.FactTermCreditCreateInput,
+          });
+        }
+      })
+    );
   }
 }
