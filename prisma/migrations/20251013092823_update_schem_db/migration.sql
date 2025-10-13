@@ -292,6 +292,140 @@ CREATE TABLE `teacher` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `affiliations` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `affiliation_name` VARCHAR(1000) NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `authors` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `scopus_author_id` VARCHAR(50) NULL,
+    `firstname` VARCHAR(255) NULL,
+    `lastname` VARCHAR(255) NULL,
+
+    UNIQUE INDEX `scopus_author_id`(`scopus_author_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `document_types` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `document_type_name` VARCHAR(50) NULL,
+
+    UNIQUE INDEX `document_type_name`(`document_type_name`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `issns` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `value` VARCHAR(20) NOT NULL,
+    `journal_id` INTEGER NOT NULL,
+
+    INDEX `journal_id`(`journal_id`),
+    UNIQUE INDEX `unique_issn_for_journal`(`value`, `journal_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `journals` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `title` VARCHAR(255) NOT NULL,
+
+    UNIQUE INDEX `title`(`title`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `keywords` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `keyword_text` VARCHAR(255) NULL,
+    `type` VARCHAR(10) NULL,
+
+    UNIQUE INDEX `keywords_keyword_text_type_key`(`keyword_text`, `type`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `publishers` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `publisher_name` VARCHAR(255) NULL,
+
+    UNIQUE INDEX `publisher_name`(`publisher_name`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `research` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `title` VARCHAR(1000) NULL,
+    `year` INTEGER NULL,
+    `cited_by` INTEGER NULL,
+    `doi` VARCHAR(255) NULL,
+    `link` VARCHAR(2083) NULL,
+    `abstract` VARCHAR(5000) NULL,
+    `isbn` VARCHAR(255) NULL,
+    `language` VARCHAR(255) NULL,
+    `document_type_id` INTEGER NULL,
+    `publisher_id` INTEGER NULL,
+    `source_id` INTEGER NULL,
+    `journal_id` INTEGER NULL,
+
+    UNIQUE INDEX `doi`(`doi`),
+    INDEX `document_type_id`(`document_type_id`),
+    INDEX `journal_id`(`journal_id`),
+    INDEX `publisher_id`(`publisher_id`),
+    INDEX `source_id`(`source_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `research_affiliations` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `research_id` INTEGER NULL,
+    `affiliation_id` INTEGER NULL,
+
+    INDEX `affiliation_id`(`affiliation_id`),
+    UNIQUE INDEX `unique_research_affiliation`(`research_id`, `affiliation_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `research_authors` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `research_id` INTEGER NULL,
+    `author_id` INTEGER NULL,
+    `author_order` INTEGER NULL,
+
+    INDEX `author_id`(`author_id`),
+    UNIQUE INDEX `unique_research_author`(`research_id`, `author_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `research_keywords` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `research_id` INTEGER NULL,
+    `keyword_id` INTEGER NULL,
+
+    INDEX `keyword_id`(`keyword_id`),
+    UNIQUE INDEX `unique_research_keyword`(`research_id`, `keyword_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `sources` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `source_name` VARCHAR(50) NULL,
+
+    UNIQUE INDEX `source_name`(`source_name`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `course_plan` (
     `course_plan_id` INTEGER NOT NULL AUTO_INCREMENT,
     `course_id` INTEGER NOT NULL,
@@ -362,6 +496,7 @@ CREATE TABLE `fact_student_plan` (
     INDEX `fk_fact_student_plan_grade_label_id`(`grade_label_id`),
     INDEX `fk_fact_student_plan_student_id`(`student_id`),
     INDEX `fk_fact_student_plan_subject_course_id`(`subject_course_id`),
+    INDEX `is_pass`(`is_pass`, `pass_year`, `pass_term`),
     PRIMARY KEY (`fact_student_plan_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -378,7 +513,7 @@ CREATE TABLE `fact_term_summary` (
     `study_term` INTEGER NOT NULL,
     `is_follow_plan` BOOLEAN NULL DEFAULT false,
     `semester_year_in_term` INTEGER NOT NULL,
-    `semester_part_in_term` VARCHAR(45) NOT NULL,
+    `semester_part_in_term` INTEGER NOT NULL,
     `grade_label_id` INTEGER NULL,
     `is_coop_eligible` BOOLEAN NOT NULL DEFAULT false,
 
@@ -510,7 +645,7 @@ ALTER TABLE `fact_class` ADD CONSTRAINT `fact_class_ibfk_1` FOREIGN KEY (`course
 ALTER TABLE `fact_class` ADD CONSTRAINT `fk_fact_class_subject` FOREIGN KEY (`subject_id`) REFERENCES `subject`(`subject_id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `fact_leave` ADD CONSTRAINT `advisor_teacher_id_ibfk` FOREIGN KEY (`advisor_id`) REFERENCES `teacher`(`teacher_id`) ON DELETE RESTRICT ON UPDATE NO ACTION;
+ALTER TABLE `fact_leave` ADD CONSTRAINT `advisor_teacher_id_ibfk` FOREIGN KEY (`advisor_id`) REFERENCES `teacher`(`teacher_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE `fact_leave` ADD CONSTRAINT `fact_leave_ibfk_1` FOREIGN KEY (`leave_type_id`) REFERENCES `leave_type`(`leave_type_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
@@ -528,7 +663,7 @@ ALTER TABLE `fact_leave_subject` ADD CONSTRAINT `fact_register_leave-subject_ibf
 ALTER TABLE `fact_leave_subject` ADD CONSTRAINT `fact_room_usage_leave-subject_ibfk` FOREIGN KEY (`fact_room_usage_id`) REFERENCES `fact_room_usage`(`room_usage_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_room_usage` ADD CONSTRAINT `fk_room_usage_class` FOREIGN KEY (`class_id`) REFERENCES `fact_class`(`class_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_room_usage` ADD CONSTRAINT `fk_room_usage_class` FOREIGN KEY (`class_id`) REFERENCES `fact_class`(`class_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE `fact_room_usage` ADD CONSTRAINT `fk_room_usage_date` FOREIGN KEY (`date_key`) REFERENCES `dim_date`(`date_key`) ON DELETE NO ACTION ON UPDATE CASCADE;
@@ -540,31 +675,31 @@ ALTER TABLE `fact_room_usage` ADD CONSTRAINT `fk_room_usage_room` FOREIGN KEY (`
 ALTER TABLE `fact_room_usage` ADD CONSTRAINT `fk_room_usage_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `teacher`(`teacher_id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `fact_student` ADD CONSTRAINT `fact_student_ibfk_1` FOREIGN KEY (`school_id`) REFERENCES `school`(`school_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_student` ADD CONSTRAINT `fact_student_ibfk_1` FOREIGN KEY (`school_id`) REFERENCES `school`(`school_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_student` ADD CONSTRAINT `fact_student_ibfk_10` FOREIGN KEY (`student_status_id`) REFERENCES `student_status`(`student_status_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_student` ADD CONSTRAINT `fact_student_ibfk_10` FOREIGN KEY (`student_status_id`) REFERENCES `student_status`(`student_status_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_student` ADD CONSTRAINT `fact_student_ibfk_3` FOREIGN KEY (`program_id`) REFERENCES `program`(`program_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_student` ADD CONSTRAINT `fact_student_ibfk_3` FOREIGN KEY (`program_id`) REFERENCES `program`(`program_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_student` ADD CONSTRAINT `fact_student_ibfk_4` FOREIGN KEY (`admission_round_id`) REFERENCES `admission_round`(`admission_round_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_student` ADD CONSTRAINT `fact_student_ibfk_4` FOREIGN KEY (`admission_round_id`) REFERENCES `admission_round`(`admission_round_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_student` ADD CONSTRAINT `fact_student_ibfk_6` FOREIGN KEY (`department_id`) REFERENCES `department`(`dept_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_student` ADD CONSTRAINT `fact_student_ibfk_6` FOREIGN KEY (`department_id`) REFERENCES `department`(`dept_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_student` ADD CONSTRAINT `fact_student_ibfk_7` FOREIGN KEY (`teacher_id`) REFERENCES `teacher`(`teacher_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_student` ADD CONSTRAINT `fact_student_ibfk_7` FOREIGN KEY (`teacher_id`) REFERENCES `teacher`(`teacher_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_student` ADD CONSTRAINT `fact_student_ibfk_8` FOREIGN KEY (`course_plan_id`) REFERENCES `course_plan`(`course_plan_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_student` ADD CONSTRAINT `fact_student_ibfk_8` FOREIGN KEY (`course_plan_id`) REFERENCES `course_plan`(`course_plan_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE `fact_student` ADD CONSTRAINT `fact_student_ibfk_9` FOREIGN KEY (`student_id`) REFERENCES `student`(`student_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `lecturer` ADD CONSTRAINT `fk_lecturer_class` FOREIGN KEY (`class_id`) REFERENCES `fact_class`(`class_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `lecturer` ADD CONSTRAINT `fk_lecturer_class` FOREIGN KEY (`class_id`) REFERENCES `fact_class`(`class_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE `lecturer` ADD CONSTRAINT `fk_lecturer_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `teacher`(`teacher_id`) ON DELETE CASCADE ON UPDATE CASCADE;
@@ -594,37 +729,37 @@ ALTER TABLE `credit_require` ADD CONSTRAINT `fk_credit_require_course_plan1` FOR
 ALTER TABLE `credit_require` ADD CONSTRAINT `fk_credit_require_subject_category1` FOREIGN KEY (`subject_category_id`) REFERENCES `subject_category`(`subject_category_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_register` ADD CONSTRAINT `fk_class_id` FOREIGN KEY (`class_id`) REFERENCES `fact_class`(`class_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_register` ADD CONSTRAINT `fk_class_id` FOREIGN KEY (`class_id`) REFERENCES `fact_class`(`class_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_register` ADD CONSTRAINT `fk_credit_require` FOREIGN KEY (`credit_require_id`) REFERENCES `credit_require`(`credit_require_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_register` ADD CONSTRAINT `fk_credit_require` FOREIGN KEY (`credit_require_id`) REFERENCES `credit_require`(`credit_require_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_register` ADD CONSTRAINT `fk_fact_register_subject_course` FOREIGN KEY (`subject_course_id`) REFERENCES `subject_course`(`subject_course_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_register` ADD CONSTRAINT `fk_fact_register_subject_course` FOREIGN KEY (`subject_course_id`) REFERENCES `subject_course`(`subject_course_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_register` ADD CONSTRAINT `fk_fact_register_grade_label_id` FOREIGN KEY (`grade_label_id`) REFERENCES `grade_label`(`grade_label_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_register` ADD CONSTRAINT `fk_fact_register_grade_label_id` FOREIGN KEY (`grade_label_id`) REFERENCES `grade_label`(`grade_label_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_register` ADD CONSTRAINT `fk_student_id` FOREIGN KEY (`student_id`) REFERENCES `student`(`student_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_register` ADD CONSTRAINT `fk_student_id` FOREIGN KEY (`student_id`) REFERENCES `student`(`student_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_student_plan` ADD CONSTRAINT `fk_fact_student_plan_grade_label_id` FOREIGN KEY (`grade_label_id`) REFERENCES `grade_label`(`grade_label_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_student_plan` ADD CONSTRAINT `fk_fact_student_plan_grade_label_id` FOREIGN KEY (`grade_label_id`) REFERENCES `grade_label`(`grade_label_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_student_plan` ADD CONSTRAINT `fk_fact_student_plan_subject_course_id` FOREIGN KEY (`subject_course_id`) REFERENCES `subject_course`(`subject_course_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_student_plan` ADD CONSTRAINT `fk_fact_student_plan_subject_course_id` FOREIGN KEY (`subject_course_id`) REFERENCES `subject_course`(`subject_course_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_term_summary` ADD CONSTRAINT `fk_fact_term_summary_grade_label_id` FOREIGN KEY (`grade_label_id`) REFERENCES `grade_label`(`grade_label_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_term_summary` ADD CONSTRAINT `fk_fact_term_summary_grade_label_id` FOREIGN KEY (`grade_label_id`) REFERENCES `grade_label`(`grade_label_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_term_summary` ADD CONSTRAINT `fk_fact_term_summary_teacher_id` FOREIGN KEY (`teacher_id`) REFERENCES `teacher`(`teacher_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_term_summary` ADD CONSTRAINT `fk_fact_term_summary_teacher_id` FOREIGN KEY (`teacher_id`) REFERENCES `teacher`(`teacher_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_term_credit` ADD CONSTRAINT `fk_fact_std_plan_credit_require_id` FOREIGN KEY (`credit_require_id`) REFERENCES `credit_require`(`credit_require_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_term_credit` ADD CONSTRAINT `fk_fact_std_plan_credit_require_id` FOREIGN KEY (`credit_require_id`) REFERENCES `credit_require`(`credit_require_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE `fact_term_credit` ADD CONSTRAINT `fk_fact_term_credit_fact_term_summary_id` FOREIGN KEY (`fact_term_summary_id`) REFERENCES `fact_term_summary`(`fact_term_summary_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `fact_term_credit` ADD CONSTRAINT `fk_fact_term_credit_fact_term_summary_id` FOREIGN KEY (`fact_term_summary_id`) REFERENCES `fact_term_summary`(`fact_term_summary_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE `pre_subject` ADD CONSTRAINT `pre_subject_ibfk_1` FOREIGN KEY (`subject_id`) REFERENCES `subject`(`subject_id`) ON DELETE CASCADE ON UPDATE CASCADE;

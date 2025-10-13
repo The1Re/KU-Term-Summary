@@ -42,16 +42,16 @@ model Department {
 model DimDate {
   dateKey       Int             @id @map("date_key")
   fullDate      DateTime        @map("full_date") @db.Date
-  day           Int             @map("day")
+  day           Int
   dayName       String          @map("day_name") @db.VarChar(20)
   dayOfWeek     Int             @map("day_of_week")
   weekNumber    Int             @map("week_number")
   weekStartDate DateTime        @map("week_start_date") @db.Date
   weekEndDate   DateTime        @map("week_end_date") @db.Date
-  month         Int             @map("month")
+  month         Int
   monthName     String          @map("month_name") @db.VarChar(20)
-  quarter       Int             @map("quarter")
-  year          Int             @map("year")
+  quarter       Int
+  year          Int
   isWeekend     Boolean         @map("is_weekend")
   factRoomUsage FactRoomUsage[]
 
@@ -110,7 +110,7 @@ model FactLeave {
   approveAdvisorAt    DateTime?            @map("approve_advisor_at") @db.Timestamp(0)
   approveDepartHeadAt DateTime?            @map("approve_depart_head_at") @db.Timestamp(0)
   approveDeanAt       DateTime?            @map("approve_dean_at") @db.Timestamp(0)
-  teacher             Teacher              @relation(fields: [advisorId], references: [teacherId], onUpdate: NoAction, map: "advisor_teacher_id_ibfk")
+  teacher             Teacher              @relation(fields: [advisorId], references: [teacherId], onDelete: NoAction, onUpdate: NoAction, map: "advisor_teacher_id_ibfk")
   leaveType           LeaveType            @relation(fields: [leaveTypeId], references: [leaveTypeId], onDelete: NoAction, onUpdate: NoAction, map: "fact_leave_ibfk_1")
   student             Student              @relation(fields: [studentId], references: [studentId], onDelete: NoAction, onUpdate: NoAction, map: "fact_leave_ibfk_2")
   factLeaveSubject    FactLeaveSubject[]
@@ -152,7 +152,7 @@ model FactRoomUsage {
   effectiveEndTs   DateTime?          @map("effective_end_ts") @db.Timestamp(0)
   changeComment    String?            @map("change_comment") @db.VarChar(255)
   factLeaveSubject FactLeaveSubject[]
-  factClass        FactClass?         @relation(fields: [classId], references: [classId], onDelete: Restrict, onUpdate: Restrict, map: "fk_room_usage_class")
+  factClass        FactClass?         @relation(fields: [classId], references: [classId], onDelete: NoAction, onUpdate: NoAction, map: "fk_room_usage_class")
   dimDate          DimDate            @relation(fields: [dateKey], references: [dateKey], onDelete: NoAction, map: "fk_room_usage_date")
   room             Room               @relation(fields: [roomId], references: [roomId], onDelete: NoAction, map: "fk_room_usage_room")
   teacher          Teacher?           @relation(fields: [teacherId], references: [teacherId], onDelete: NoAction, map: "fk_room_usage_teacher")
@@ -176,13 +176,13 @@ model FactStudent {
   studentStatusId  Int            @map("student_status_id")
   admissionYear    Int            @map("admission_year")
   studyGeneration  Int            @map("study_generation")
-  school           School         @relation(fields: [schoolId], references: [schoolId], onUpdate: Restrict, map: "fact_student_ibfk_1")
-  studentStatus    StudentStatus  @relation(fields: [studentStatusId], references: [studentStatusId], onUpdate: Restrict, map: "fact_student_ibfk_10")
-  program          Program        @relation(fields: [programId], references: [programId], onUpdate: Restrict, map: "fact_student_ibfk_3")
-  admissionRound   AdmissionRound @relation(fields: [admissionRoundId], references: [admissionRoundId], onUpdate: Restrict, map: "fact_student_ibfk_4")
-  department       Department     @relation(fields: [departmentId], references: [deptId], onUpdate: Restrict, map: "fact_student_ibfk_6")
-  teacher          Teacher        @relation(fields: [teacherId], references: [teacherId], onUpdate: Restrict, map: "fact_student_ibfk_7")
-  coursePlan       CoursePlan     @relation(fields: [coursePlanId], references: [coursePlanId], onUpdate: Restrict, map: "fact_student_ibfk_8")
+  school           School         @relation(fields: [schoolId], references: [schoolId], onDelete: NoAction, onUpdate: NoAction, map: "fact_student_ibfk_1")
+  studentStatus    StudentStatus  @relation(fields: [studentStatusId], references: [studentStatusId], onDelete: NoAction, onUpdate: NoAction, map: "fact_student_ibfk_10")
+  program          Program        @relation(fields: [programId], references: [programId], onDelete: NoAction, onUpdate: NoAction, map: "fact_student_ibfk_3")
+  admissionRound   AdmissionRound @relation(fields: [admissionRoundId], references: [admissionRoundId], onDelete: NoAction, onUpdate: NoAction, map: "fact_student_ibfk_4")
+  department       Department     @relation(fields: [departmentId], references: [deptId], onDelete: NoAction, onUpdate: NoAction, map: "fact_student_ibfk_6")
+  teacher          Teacher        @relation(fields: [teacherId], references: [teacherId], onDelete: NoAction, onUpdate: NoAction, map: "fact_student_ibfk_7")
+  coursePlan       CoursePlan     @relation(fields: [coursePlanId], references: [coursePlanId], onDelete: NoAction, onUpdate: NoAction, map: "fact_student_ibfk_8")
   student          Student        @relation(fields: [studentId], references: [studentId], onDelete: Cascade, map: "fact_student_ibfk_9")
 
   @@id([studentId, schoolId, studentStatusId, departmentId, programId, teacherId, coursePlanId, admissionRoundId])
@@ -209,7 +209,7 @@ model LeaveType {
 model Lecturer {
   teacherId Int       @map("teacher_id")
   classId   Int       @map("class_id")
-  factClass FactClass @relation(fields: [classId], references: [classId], onUpdate: Restrict, map: "fk_lecturer_class")
+  factClass FactClass @relation(fields: [classId], references: [classId], onDelete: NoAction, onUpdate: NoAction, map: "fk_lecturer_class")
   teacher   Teacher   @relation(fields: [teacherId], references: [teacherId], onDelete: Cascade, map: "fk_lecturer_teacher")
 
   @@id([teacherId, classId])
@@ -329,4 +329,120 @@ model Teacher {
   @@index([departmentId], map: "department_id")
   @@index([teacherId, teacherCode], map: "teacher_id_teacher_code")
   @@map("teacher")
+}
+
+model Affiliations {
+  id              Int     @id @default(autoincrement())
+  affiliationName String? @map("affiliation_name") @db.VarChar(1000)
+
+  @@map("affiliations")
+}
+
+model Authors {
+  id             Int     @id @default(autoincrement())
+  scopusAuthorId String? @unique(map: "scopus_author_id") @map("scopus_author_id") @db.VarChar(50)
+  firstname      String? @db.VarChar(255)
+  lastname       String? @db.VarChar(255)
+
+  @@map("authors")
+}
+
+model DocumentTypes {
+  id               Int     @id @default(autoincrement())
+  documentTypeName String? @unique(map: "document_type_name") @map("document_type_name") @db.VarChar(50)
+
+  @@map("document_types")
+}
+
+model Issns {
+  id        Int    @id @default(autoincrement())
+  value     String @db.VarChar(20)
+  journalId Int    @map("journal_id")
+
+  @@unique([value, journalId], map: "unique_issn_for_journal")
+  @@index([journalId], map: "journal_id")
+  @@map("issns")
+}
+
+model Journals {
+  id    Int    @id @default(autoincrement())
+  title String @unique(map: "title") @db.VarChar(255)
+
+  @@map("journals")
+}
+
+model Keywords {
+  id          Int     @id @default(autoincrement())
+  keywordText String? @map("keyword_text") @db.VarChar(255)
+  type        String? @db.VarChar(10)
+
+  @@unique([keywordText, type])
+  @@map("keywords")
+}
+
+model Publishers {
+  id            Int     @id @default(autoincrement())
+  publisherName String? @unique(map: "publisher_name") @map("publisher_name") @db.VarChar(255)
+
+  @@map("publishers")
+}
+
+model Research {
+  id             Int     @id @default(autoincrement())
+  title          String? @db.VarChar(1000)
+  year           Int?
+  citedBy        Int?    @map("cited_by")
+  doi            String? @unique(map: "doi") @db.VarChar(255)
+  link           String? @db.VarChar(2083)
+  abstract       String? @db.VarChar(5000)
+  isbn           String? @db.VarChar(255)
+  language       String? @db.VarChar(255)
+  documentTypeId Int?    @map("document_type_id")
+  publisherId    Int?    @map("publisher_id")
+  sourceId       Int?    @map("source_id")
+  journalId      Int?    @map("journal_id")
+
+  @@index([documentTypeId], map: "document_type_id")
+  @@index([journalId], map: "journal_id")
+  @@index([publisherId], map: "publisher_id")
+  @@index([sourceId], map: "source_id")
+  @@map("research")
+}
+
+model ResearchAffiliations {
+  id            Int  @id @default(autoincrement())
+  researchId    Int? @map("research_id")
+  affiliationId Int? @map("affiliation_id")
+
+  @@unique([researchId, affiliationId], map: "unique_research_affiliation")
+  @@index([affiliationId], map: "affiliation_id")
+  @@map("research_affiliations")
+}
+
+model ResearchAuthors {
+  id          Int  @id @default(autoincrement())
+  researchId  Int? @map("research_id")
+  authorId    Int? @map("author_id")
+  authorOrder Int? @map("author_order")
+
+  @@unique([researchId, authorId], map: "unique_research_author")
+  @@index([authorId], map: "author_id")
+  @@map("research_authors")
+}
+
+model ResearchKeywords {
+  id         Int  @id @default(autoincrement())
+  researchId Int? @map("research_id")
+  keywordId  Int? @map("keyword_id")
+
+  @@unique([researchId, keywordId], map: "unique_research_keyword")
+  @@index([keywordId], map: "keyword_id")
+  @@map("research_keywords")
+}
+
+model Sources {
+  id         Int     @id @default(autoincrement())
+  sourceName String? @unique(map: "source_name") @map("source_name") @db.VarChar(50)
+
+  @@map("sources")
 }
