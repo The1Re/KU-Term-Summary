@@ -125,10 +125,12 @@ export class TermCreditService {
               factTermSummary: {
                 connect: { factTermSummaryId: termSummaryId },
               },
+              creditRequire: {
+                connect: { creditRequireId: item.creditRequireId },
+              },
               creditPass: item.totalCredit,
               grade: item.avgGrade,
               creditRequire_: item.creditRequire,
-              creditRequireId: item.creditRequireId,
             } as Prisma.FactTermCreditCreateInput,
           });
         }

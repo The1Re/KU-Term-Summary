@@ -10,9 +10,6 @@ export class TermSummaryDto
   @ApiProperty({ example: 186, description: 'รหัสนักศึกษา (FK ไป student)' })
   studentId: number;
 
-  @ApiProperty({ example: '6520501234', description: 'รหัสนักศึกษา' })
-  studentUsername: string;
-
   @ApiProperty({
     example: 7,
     description: 'รหัสอาจารย์ที่ปรึกษา (FK ไป teacher)',
