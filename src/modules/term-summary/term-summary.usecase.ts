@@ -1,4 +1,4 @@
-import { StudentStatus } from '@/constants';
+import { GPA_INCLUDED, StudentStatus } from '@/constants';
 import { MainSubject } from '@/constants/mainSubject';
 import { DatabaseService } from '@/core/database/database.service';
 import { calculateGPA } from '@/core/utils/calculate';
@@ -145,6 +145,7 @@ export class TermSummaryUseCase {
       where: {
         studentId: studentId,
         gradeNumber: { not: null },
+        gradeCharacter: { in: GPA_INCLUDED },
         creditRegis: { not: null },
         OR: [
           { studyYearInRegis: { lt: studyYear } },
@@ -184,12 +185,12 @@ export class TermSummaryUseCase {
     );
 
     const creditTerm = registerInTerm.reduce(
-      (sum, r) => sum + (r.creditRegis ?? 0),
+      (sum, r) => sum + (r.gradeCharacter === 'F' ? 0 : (r.creditRegis ?? 0)),
       0
     );
 
     const creditAll = registers.reduce(
-      (sum, r) => sum + (r.creditRegis ?? 0),
+      (sum, r) => sum + (r.gradeCharacter === 'F' ? 0 : (r.creditRegis ?? 0)),
       0
     );
 
