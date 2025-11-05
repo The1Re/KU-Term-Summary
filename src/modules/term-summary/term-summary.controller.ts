@@ -95,6 +95,64 @@ export class TermSummaryController {
     return { message: 'Term summaries created/updated successfully' };
   }
 
+  @Post('sync')
+  @ApiOperation({
+    summary: 'Sync term summary for all students and all term',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Success',
+    example: {
+      message: 'Term summaries created/updated successfully',
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found',
+    examples: {
+      studentNotFound: {
+        summary: 'Student Not Found',
+        value: {
+          message: 'Student with code 6520501234 not found',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+    example: {
+      message: 'Internal server error',
+    },
+  })
+  async sysncTermSummaryForAllStudents() {
+    const students = await this.studentService.getAllStudents();
+
+    for (const student of students) {
+      const studentPlan = await this.studentPlanService.getAllStudentPlan(
+        student.studentId
+      );
+
+      if (!studentPlan) {
+        await this.studentPlanUsecase.createStudentPlan(student.studentId);
+      }
+      await this.studentPlanUsecase.updateStudentPlan(student.studentId);
+      const allTerm = await this.termsummaryUsecase.getAllTerm(
+        student.studentId
+      );
+
+      for (const term of allTerm) {
+        await this.termsummaryUsecase.createOrUpdateTermSummary(
+          student.studentId,
+          term.studyYearInRegis!,
+          term.studyTermInRegis!
+        );
+      }
+    }
+
+    return { message: 'Term summaries created/updated successfully' };
+  }
+
   @Get(':studentCode')
   @ApiOperation({
     summary: 'Get all Term Summary',
