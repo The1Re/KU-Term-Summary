@@ -1,9 +1,10 @@
 import { DatabaseService } from '@/core/database/database.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { FactRegister, Prisma } from '@prisma/client';
+import { FactRegister, FactStudentPlan, Prisma } from '@prisma/client';
 import { SubjectCourseService } from '@/modules/subject-course/subject-course.service';
 import { RegisterService } from '@/modules/register/register.service';
 import { StudentPlanService } from './student-plan.service';
+import { SpecialCase } from '@/constants';
 
 @Injectable()
 export class StudentPlanUsecase {
@@ -60,14 +61,43 @@ export class StudentPlanUsecase {
       this.registerService.getAllRegisterByStudentId(studentId),
     ]);
 
+    const specialSubject = new Map<string, FactStudentPlan>();
+
+    for (const plan of studentPlan) {
+      const subjectCode = plan.subjectCourse.subject.subjectCode;
+      if (subjectCode.includes(SpecialCase.SUBJECT)) {
+        const newSubjectCode = subjectCode.replaceAll(SpecialCase.SUBJECT, '');
+        if (newSubjectCode.length === 0) {
+          continue;
+        }
+        specialSubject.set(newSubjectCode, plan);
+      }
+    }
+
     // Group registers by subjectCourseId
     // previous term -> current term
     const groupRegisterBySubjectCourseId = registers.reduce((map, register) => {
-      if (!register.subjectCourseId) return map;
+      let subjectCourseId = register.subjectCourseId;
+      let foundSpecial = false;
 
-      const list = map.get(register.subjectCourseId) ?? [];
+      for (const key of specialSubject.keys()) {
+        if (register.subjectCodeInRegis?.startsWith(key)) {
+          const plan = specialSubject.get(key);
+          if (plan) {
+            subjectCourseId = plan.subjectCourseId;
+            foundSpecial = true;
+            break;
+          }
+        }
+      }
+
+      if (!subjectCourseId && !foundSpecial) {
+        return map;
+      }
+
+      const list = map.get(subjectCourseId!) ?? [];
       list.push(register);
-      map.set(register.subjectCourseId, list);
+      map.set(subjectCourseId!, list);
 
       return map;
     }, new Map<number, FactRegister[]>());
