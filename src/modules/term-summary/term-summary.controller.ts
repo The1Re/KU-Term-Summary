@@ -77,7 +77,7 @@ export class TermSummaryController {
         student.studentId
       );
 
-      if (!studentPlan) {
+      if (studentPlan.length === 0) {
         await this.studentPlanUsecase.createStudentPlan(student.studentId);
       }
       await this.studentPlanUsecase.updateStudentPlan(student.studentId);
@@ -133,7 +133,7 @@ export class TermSummaryController {
         student.studentId
       );
 
-      if (!studentPlan) {
+      if (studentPlan.length === 0) {
         await this.studentPlanUsecase.createStudentPlan(student.studentId);
       }
       await this.studentPlanUsecase.updateStudentPlan(student.studentId);
