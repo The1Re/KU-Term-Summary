@@ -6,6 +6,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { FactTermCredit, FactTermSummary, Prisma } from '@prisma/client';
 import { StudentService } from '../student/student.service';
 import { TermCreditService } from '../term-credit/term-credit.service';
+import { normalizeSummerYear } from '@/core/utils/normalize';
 
 @Injectable()
 export class TermSummaryUseCase {
@@ -140,7 +141,7 @@ export class TermSummaryUseCase {
       throw new NotFoundException('Student not found in FactStudent');
     }
 
-    const registers = await this.databaseService.factRegister.findMany({
+    const _registers = this.databaseService.factRegister.findMany({
       where: {
         studentId: studentId,
         gradeNumber: { not: null },
@@ -163,6 +164,19 @@ export class TermSummaryUseCase {
       ],
     });
 
+    const _existingSummary = this.databaseService.factTermSummary.findFirst({
+      where: {
+        studentId: studentId,
+        studyYear,
+        studyTerm,
+      },
+    });
+
+    const [registers, existingSummary] = await Promise.all([
+      _registers,
+      _existingSummary,
+    ]);
+
     if (registers.length === 0) return null;
 
     const registerInTerm = registers.filter(
@@ -178,6 +192,8 @@ export class TermSummaryUseCase {
       (sum, r) => sum + (r.creditRegis ?? 0),
       0
     );
+
+    studyYear = normalizeSummerYear(studyYear, studyTerm);
 
     const termSummary: Prisma.FactTermSummaryCreateInput = {
       studentId: studentId,
@@ -202,15 +218,6 @@ export class TermSummaryUseCase {
         connect: { teacherId: factStudent.teacherId },
       },
     };
-
-    const existingSummary =
-      await this.databaseService.factTermSummary.findFirst({
-        where: {
-          studentId: studentId,
-          studyYear,
-          studyTerm,
-        },
-      });
 
     let summary: FactTermSummary;
 

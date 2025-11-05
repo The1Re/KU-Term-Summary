@@ -5,6 +5,7 @@ import { SubjectCourseService } from '@/modules/subject-course/subject-course.se
 import { RegisterService } from '@/modules/register/register.service';
 import { StudentPlanService } from './student-plan.service';
 import { SpecialCase } from '@/constants';
+import { normalizeSummerYear } from '@/core/utils/normalize';
 
 @Injectable()
 export class StudentPlanUsecase {
@@ -94,6 +95,11 @@ export class StudentPlanUsecase {
       if (!subjectCourseId && !foundSpecial) {
         return map;
       }
+
+      register.studyYearInRegis = normalizeSummerYear(
+        register.studyYearInRegis!,
+        register.studyTermInRegis!
+      );
 
       const list = map.get(subjectCourseId!) ?? [];
       list.push(register);
