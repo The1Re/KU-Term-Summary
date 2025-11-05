@@ -283,4 +283,12 @@ export class TermSummaryUseCase {
       term: latestRegister.studyTermInRegis,
     };
   }
+
+  async getAllTerm(studentId: number) {
+    return await this.databaseService.factRegister.groupBy({
+      by: ['studyYearInRegis', 'studyTermInRegis'],
+      where: { studentId },
+      orderBy: [{ studyYearInRegis: 'desc' }, { studyTermInRegis: 'desc' }],
+    });
+  }
 }
