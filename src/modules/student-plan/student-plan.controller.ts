@@ -201,6 +201,7 @@ export class StudentPlanController {
         nameSubjectThai: plan.subjectCourse.subject.nameSubjectThai,
         nameSubjectEng: plan.subjectCourse.subject.nameSubjectEng,
         categoryName: plan.subjectCourse.subject.subjectCategory.categoryName,
+        credits: plan.subjectCourse.subject.subCredit.credit,
       },
       lastRegisterYear: plan.lastRegisterYear,
       lastRegisterTerm: plan.lastRegisterTerm,
