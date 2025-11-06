@@ -1,5 +1,4 @@
 import { GPA_INCLUDED, StudentStatus } from '@/constants';
-import { MainSubject } from '@/constants/mainSubject';
 import { DatabaseService } from '@/core/database/database.service';
 import { calculateGPA } from '@/core/utils/calculate';
 import { Injectable, NotFoundException } from '@nestjs/common';
@@ -17,39 +16,67 @@ export class TermSummaryUseCase {
   ) {}
 
   async checkFollowPlan(studentId: number, year: number, term: number) {
-    const countPlanNotPass = await this.databaseService.factStudentPlan.count({
-      where: {
-        studentId: studentId,
-        isPass: false,
-        OR: [
-          {
-            subjectCourse: {
-              partYear: { lt: year },
-            },
-          },
-          {
-            subjectCourse: {
-              partYear: year,
-              stdTerm: {
-                lte: term,
-              },
-            },
-          },
-          {
-            subjectCourse: {
-              subject: {
-                subjectCategory: {
-                  categoryName: {
-                    in: [MainSubject.CORE, MainSubject.SPECIAL],
-                  },
-                },
-              },
-            },
-          },
-        ],
-      },
-    });
-    return !countPlanNotPass;
+    const [creditRequire, studentPlan] = await Promise.all([
+      this.databaseService.$queryRaw<
+        {
+          subjectCategoryId: number;
+          credit: number;
+        }[]
+      >`
+        SELECT
+         	cr.subject_category_id AS subjectCategoryId,
+          SUM(crd.credit) AS credit
+        FROM fact_student fs
+        JOIN course_plan cp ON cp.course_plan_id = fs.course_plan_id
+        JOIN credit_require cr ON cr.course_plan_id = cp.course_plan_id
+        JOIN credit_require_detail crd ON crd.credit_require_id = cr.credit_require_id
+        WHERE 1=1
+         	AND fs.student_id = ${studentId}
+          AND (
+       	    crd.study_year < ${year}
+            OR
+            (crd.study_year = ${year} AND crd.study_term <= ${term})
+          )
+        GROUP BY cr.subject_category_id
+      `,
+      this.databaseService.$queryRaw<
+        {
+          subjectCategoryId: number;
+          totalCredit: number;
+          isPass: boolean;
+        }[]
+      >`
+        SELECT
+          s.subject_category_id AS subjectCategoryId,
+          SUM(subc.credit) AS totalCredit
+        FROM
+          fact_student_plan AS fsp
+        JOIN subject_course sc ON sc.subject_course_id = fsp.subject_course_id
+        JOIN subject s ON s.subject_id = sc.subject_id
+        JOIN sub_credit subc ON subc.sub_credit_id = s.sub_credit_id
+        WHERE 1=1
+          AND fsp.student_id = ${studentId}
+          AND fsp.is_pass = 1
+          AND fsp.std_grade BETWEEN 1 AND 4
+          AND (
+            fsp.pass_year < ${year}
+            OR
+            (fsp.pass_year = ${year} AND fsp.pass_term <= ${term})
+          )
+        GROUP BY s.subject_category_id
+      `,
+    ]);
+
+    const planMap = new Map<number, number>();
+    for (const sp of studentPlan) {
+      planMap.set(sp.subjectCategoryId, sp.totalCredit);
+    }
+
+    for (const cr of creditRequire) {
+      const total = planMap.get(cr.subjectCategoryId) ?? 0;
+      if (total < cr.credit) return false;
+    }
+    return true;
   }
 
   async checkIsEligibleForCoop(

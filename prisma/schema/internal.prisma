@@ -16,18 +16,32 @@ model CoursePlan {
 }
 
 model CreditRequire {
-  creditRequireId   Int              @id @default(autoincrement()) @map("credit_require_id")
-  coursePlanId      Int              @map("course_plan_id")
-  subjectCategoryId Int              @map("subject_category_id")
-  creditRequire     Int              @map("credit_require")
-  coursePlan        CoursePlan       @relation(fields: [coursePlanId], references: [coursePlanId], onUpdate: Restrict, map: "fk_credit_require_course_plan1")
-  subjectCategory   SubjectCategory  @relation(fields: [subjectCategoryId], references: [subjectCategoryId], onUpdate: Restrict, map: "fk_credit_require_subject_category1")
-  factRegister      FactRegister[]
-  factTermCredit    FactTermCredit[]
+  creditRequireId     Int                   @id @default(autoincrement()) @map("credit_require_id")
+  coursePlanId        Int                   @map("course_plan_id")
+  subjectCategoryId   Int                   @map("subject_category_id")
+  creditRequire       Int                   @map("credit_require")
+  coursePlan          CoursePlan            @relation(fields: [coursePlanId], references: [coursePlanId], onDelete: NoAction, onUpdate: NoAction, map: "fk_credit_require_course_plan1")
+  subjectCategory     SubjectCategory       @relation(fields: [subjectCategoryId], references: [subjectCategoryId], onDelete: NoAction, onUpdate: NoAction, map: "fk_credit_require_subject_category1")
+  factRegister        FactRegister[]
+  factTermCredit      FactTermCredit[]
+  creditRequireDetail CreditRequireDetail[]
 
   @@index([coursePlanId], map: "fk_credit_require_course_plan1_idx")
   @@index([subjectCategoryId], map: "fk_credit_require_subject_category1_idx")
   @@map("credit_require")
+}
+
+model CreditRequireDetail {
+  creditRequireDetailId Int           @id @default(autoincrement()) @map("credit_require_detail_id")
+  creditRequireId       Int           @map("credit_require_id")
+  credit                Int           @map("credit")
+  studyYear             Int           @map("study_year")
+  studyTerm             Int           @map("study_term")
+  creditRequire         CreditRequire @relation(fields: [creditRequireId], references: [creditRequireId], onDelete: NoAction, onUpdate: NoAction, map: "fk_credit_require_detail_credit_require1")
+
+  @@index([creditRequireId], map: "fk_credit_require_detail_credit_require1_idx")
+  @@index([studyYear, studyTerm], map: "study_year_term")
+  @@map("credit_require_detail")
 }
 
 model FactRegister {
