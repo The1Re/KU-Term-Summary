@@ -36,4 +36,10 @@ export class SubjectDto {
     description: 'The name of the subject category',
   })
   categoryName: string;
+
+  @ApiProperty({
+    example: '3',
+    description: 'credit of the subject',
+  })
+  credits: number;
 }
