@@ -9,12 +9,34 @@ import { normalizeSummerYear } from '@/core/utils/normalize';
 
 @Injectable()
 export class StudentPlanUsecase {
+  private static readonly COURSE_COLOR_LABEL_IDS: number[] = [1, 2, 3, 4];
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly studentPlanService: StudentPlanService,
     private readonly subjectCourseService: SubjectCourseService,
     private readonly registerService: RegisterService
   ) {}
+
+  private async resolveGradeLabelId(
+    stdGrade: number | null,
+    tx?: Prisma.TransactionClient
+  ): Promise<number | null> {
+    if (stdGrade === null || stdGrade < 0 || stdGrade > 4.0) return null;
+
+    const db = tx ?? this.databaseService;
+
+    const label = await db.gradeLabel.findFirst({
+      where: {
+        gradeLabelId: { in: StudentPlanUsecase.COURSE_COLOR_LABEL_IDS },
+        gradeMinInStatus: { lte: stdGrade },
+        gradeMaxStatus: { gte: stdGrade },
+      },
+      orderBy: { gradeMinInStatus: 'desc' },
+      select: { gradeLabelId: true },
+    });
+
+    return label?.gradeLabelId ?? null;
+  }
 
   async createStudentPlan(studentId: number) {
     const coursePlanId = await this.databaseService.factStudent.findFirst({
@@ -113,26 +135,29 @@ export class StudentPlanUsecase {
       groupRegisterBySubjectCourseId.has(plan.subjectCourseId)
     );
 
-    await this.databaseService.$transaction(
-      filteredStudentPlan.map(plan => {
+    await this.databaseService.$transaction(async tx => {
+      for (const plan of filteredStudentPlan) {
         const registers =
           groupRegisterBySubjectCourseId.get(plan.subjectCourseId) ?? [];
 
         const latestRegister = registers[0];
+
         const isCurrentTermPass =
-          (latestRegister.gradeNumber ?? 0) > 0 ||
-          latestRegister.gradeCharacter === 'P';
+          (latestRegister?.gradeNumber ?? 0) > 0 ||
+          latestRegister?.gradeCharacter === 'P';
 
         const note = registers
           .reverse()
           .map(register => register.gradeCharacter)
           .join(',');
 
-        return this.databaseService.factStudentPlan.update({
-          where: {
-            studentId,
-            factStudentPlanId: plan.factStudentPlanId,
-          },
+        const gradeLabelId = await this.resolveGradeLabelId(
+          latestRegister.gradeNumber,
+          tx
+        );
+
+        await tx.factStudentPlan.update({
+          where: { studentId, factStudentPlanId: plan.factStudentPlanId },
           data: {
             ...(isCurrentTermPass && {
               passYear: latestRegister.studyYearInRegis,
@@ -141,10 +166,11 @@ export class StudentPlanUsecase {
             isPass: isCurrentTermPass,
             stdGrade: latestRegister.gradeNumber,
             gradeDetails: note,
+            gradeLabelId,
           },
         });
-      })
-    );
+      }
+    });
 
     return true;
   }

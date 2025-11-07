@@ -9,11 +9,29 @@ import { normalizeSummerYear } from '@/core/utils/normalize';
 
 @Injectable()
 export class TermSummaryUseCase {
+  private static readonly TERM_STATUS_LABEL_IDS: number[] = [5, 6, 7, 8];
+
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly studentService: StudentService,
     private readonly termCreditService: TermCreditService
   ) {}
+
+  private async resolveGradeLabelIdFromGpax(gpax: number | null) {
+    if (gpax === null || gpax < 0 || gpax > 4.0) return null;
+
+    const label = await this.databaseService.gradeLabel.findFirst({
+      where: {
+        gradeLabelId: { in: TermSummaryUseCase.TERM_STATUS_LABEL_IDS },
+        gradeMinInStatus: { lte: gpax },
+        gradeMaxStatus: { gte: gpax },
+      },
+      orderBy: { gradeMinInStatus: 'desc' },
+      select: { gradeLabelId: true },
+    });
+
+    return label?.gradeLabelId ?? null;
+  }
 
   async checkFollowPlan(studentId: number, year: number, term: number) {
     const [creditRequire, studentPlan] = await Promise.all([
@@ -168,7 +186,6 @@ export class TermSummaryUseCase {
     studyTerm: number
   ): Promise<FactTermSummary | null> {
     const factStudent = await this.studentService.getStudentById(studentId);
-
     if (!factStudent) {
       throw new NotFoundException('Student not found in FactStudent');
     }
@@ -209,7 +226,6 @@ export class TermSummaryUseCase {
       _registers,
       _existingSummary,
     ]);
-
     if (registers.length === 0) return null;
 
     const registerInTerm = registers.filter(
@@ -220,13 +236,24 @@ export class TermSummaryUseCase {
       (sum, r) => sum + (r.gradeCharacter === 'F' ? 0 : (r.creditRegis ?? 0)),
       0
     );
-
     const creditAll = registers.reduce(
       (sum, r) => sum + (r.gradeCharacter === 'F' ? 0 : (r.creditRegis ?? 0)),
       0
     );
 
     studyYear = normalizeSummerYear(studyYear, studyTerm);
+
+    const gpaTerm = calculateGPA(
+      registerInTerm.map(r => ({
+        grade: r.gradeNumber!,
+        credit: r.creditRegis!,
+      }))
+    );
+    const gpaxAll = calculateGPA(
+      registers.map(r => ({ grade: r.gradeNumber!, credit: r.creditRegis! }))
+    );
+
+    const gradeLabelId = await this.resolveGradeLabelIdFromGpax(gpaxAll);
 
     const termSummary: Prisma.FactTermSummaryCreateInput = {
       studyYear: studyYear,
@@ -235,15 +262,13 @@ export class TermSummaryUseCase {
       semesterPartInTerm: studyTerm,
       creditAll: creditAll,
       creditTerm: creditTerm,
-      gpa: calculateGPA(
-        registerInTerm.map(r => ({
-          grade: r.gradeNumber!,
-          credit: r.creditRegis!,
-        }))
-      ),
-      gpax: calculateGPA(
-        registers.map(r => ({ grade: r.gradeNumber!, credit: r.creditRegis! }))
-      ),
+      gpa: gpaTerm,
+      gpax: gpaxAll,
+      gradeLabel: gradeLabelId
+        ? {
+            connect: { gradeLabelId: gradeLabelId },
+          }
+        : undefined,
       isFollowPlan: await this.checkFollowPlan(studentId, studyYear, studyTerm),
       isCoopEligible: false,
       teacher: {
