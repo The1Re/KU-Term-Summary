@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { FactTermSummary } from '@prisma/client';
+import { CategoryCreditDto } from './category-credit.dto';
 
 export class TermSummaryDto
   implements Omit<FactTermSummary, 'createAt' | 'updatedAt'>
@@ -70,4 +71,12 @@ export class TermSummaryDto
     description: 'มีสิทธิสหกิจศึกษาหรือไม่ (default=false)',
   })
   isCoopEligible: boolean;
+
+  @ApiProperty({
+    type: [CategoryCreditDto],
+    description:
+      'ข้อมูลหน่วยกิจตามหมวดวิชา เช่น หมวด A/B/C พร้อมหน่วยกิตและเกรดเฉลี่ย',
+    required: false,
+  })
+  categoryCredit?: CategoryCreditDto[];
 }
