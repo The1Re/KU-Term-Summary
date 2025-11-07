@@ -118,17 +118,18 @@ export class TermSummaryUseCase {
     studentId: number,
     totalCredit: number,
     year: number,
-    term: number
+    term: number,
+    termCredit: FactTermCredit[]
   ) {
     if (term === 3) {
       return StudentStatus.ACTIVE;
     }
     const Terms = await this.databaseService.factTermSummary.findMany({
-      where: { studentId, studyTerm: { in: [0, 1] } },
+      where: { studentId, studyTerm: { in: [1, 2] } },
       orderBy: [{ studyYear: 'desc' }, { studyTerm: 'desc' }],
       take: 2,
     });
-    if (!Terms.length) return StudentStatus.ACTIVE;
+    if (Terms.length === 0) return StudentStatus.ACTIVE;
 
     const [latestTerm, previousTerm] = Terms;
 
@@ -149,11 +150,15 @@ export class TermSummaryUseCase {
         }
       }
     }
-    if (latestTerm.creditAll >= totalCredit) {
+    const allCategoriesMet = termCredit.every(tc => {
+      const required = tc.creditRequire_ ?? 0;
+      const passed = tc.creditPass ?? 0;
+      return passed >= required;
+    });
+    if (latestTerm.creditAll >= totalCredit && allCategoriesMet) {
       const isFollowPlan = await this.checkFollowPlan(studentId, year, term);
       if (isFollowPlan) return StudentStatus.EXPECTED_GRADUATION;
     }
-
     return StudentStatus.ACTIVE;
   }
 
@@ -262,16 +267,6 @@ export class TermSummaryUseCase {
       });
     }
 
-    const totalCredit = factStudent.coursePlan.totalCredit ?? 0;
-    const studentStatusId = await this.checkStudentStatus(
-      studentId,
-      totalCredit,
-      studyYear,
-      studyTerm
-    );
-
-    await this.studentService.updateStudentStatus(studentId, studentStatusId);
-
     const termCredits = await this.termCreditService.createTermCredit(
       summary.factTermSummaryId,
       studentId,
@@ -279,6 +274,16 @@ export class TermSummaryUseCase {
       studyYear,
       studyTerm
     );
+
+    const totalCredit = factStudent.coursePlan.totalCredit ?? 0;
+    const studentStatusId = await this.checkStudentStatus(
+      studentId,
+      totalCredit,
+      studyYear,
+      studyTerm,
+      termCredits
+    );
+    await this.studentService.updateStudentStatus(studentId, studentStatusId);
 
     const isCoopEligible = await this.checkIsEligibleForCoop(
       studentId,
