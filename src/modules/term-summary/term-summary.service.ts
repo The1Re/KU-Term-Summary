@@ -9,6 +9,17 @@ export class TermSummaryService {
     return this.databaseService.factTermSummary.findMany({
       where: { studentId },
       orderBy: [{ studyYear: 'desc' }, { studyTerm: 'desc' }],
+      include: {
+        factTermCredit: {
+          include: {
+            creditRequire: {
+              include: {
+                subjectCategory: true,
+              },
+            },
+          },
+        },
+      },
     });
   }
 

@@ -15,6 +15,7 @@ import { StudentPlanService } from '../student-plan/student-plan.service';
 import { TermSummaryService } from './term-summary.service';
 import { TermSummaryDto } from './dto/get-all-term-summary.dto';
 import { TermSummaryUseCase } from './term-summary.usecase';
+import { CategoryCreditDto } from './dto/category-credit.dto';
 
 @Controller('term-summary')
 export class TermSummaryController {
@@ -155,7 +156,7 @@ export class TermSummaryController {
 
   @Get(':studentCode')
   @ApiOperation({
-    summary: 'Get all Term Summary',
+    summary: 'Get all Term Summary for specific student',
   })
   @ApiResponse({
     status: 200,
@@ -169,18 +170,14 @@ export class TermSummaryController {
     examples: {
       studentNotFound: {
         summary: 'Student Not Found',
-        value: {
-          message: 'Student not found',
-        },
+        value: { message: 'Student not found' },
       },
     },
   })
   @ApiResponse({
     status: 500,
     description: 'Internal server error',
-    example: {
-      message: 'Internal server error',
-    },
+    example: { message: 'Internal server error' },
   })
   async getAllTermSummary(@Param('studentCode') studentCode: string) {
     const student =
@@ -188,6 +185,37 @@ export class TermSummaryController {
     if (!student) {
       throw new NotFoundException('Student not found');
     }
-    return this.termsummaryService.getTermSummary(student.studentId);
+
+    const termSummaries = await this.termsummaryService.getTermSummary(
+      student.studentId
+    );
+
+    const result: TermSummaryDto[] = termSummaries.map(term => ({
+      factTermSummaryId: term.factTermSummaryId,
+      studentId: term.studentId,
+      teacherId: term.teacherId,
+      creditTerm: term.creditTerm,
+      creditAll: term.creditAll,
+      gpa: term.gpa,
+      gpax: term.gpax,
+      studyYear: term.studyYear,
+      studyTerm: term.studyTerm,
+      isFollowPlan: term.isFollowPlan ?? false,
+      semesterYearInTerm: term.semesterYearInTerm,
+      semesterPartInTerm: term.semesterPartInTerm,
+      gradeLabelId: term.gradeLabelId,
+      isCoopEligible: term.isCoopEligible,
+
+      categoryCredit: (term.factTermCredit || []).map(termCredit => ({
+        categoryId: termCredit?.creditRequire?.subjectCategoryId ?? 0,
+        categoryName:
+          termCredit?.creditRequire?.subjectCategory?.categoryName ?? '',
+        creditRequire: termCredit?.creditRequire_ ?? 0,
+        creditPass: termCredit?.creditPass ?? 0,
+        avgGrade: termCredit?.grade ?? 0,
+      })) as CategoryCreditDto[],
+    }));
+
+    return result;
   }
 }
