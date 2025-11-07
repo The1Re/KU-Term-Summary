@@ -197,7 +197,6 @@ export class TermSummaryUseCase {
     studyYear = normalizeSummerYear(studyYear, studyTerm);
 
     const termSummary: Prisma.FactTermSummaryCreateInput = {
-      studentId: studentId,
       studyYear: studyYear,
       studyTerm: studyTerm,
       semesterYearInTerm: registerInTerm[0].semesterYearInRegis!,
@@ -217,6 +216,9 @@ export class TermSummaryUseCase {
       isCoopEligible: false,
       teacher: {
         connect: { teacherId: factStudent.teacherId },
+      },
+      student: {
+        connect: { studentId: studentId },
       },
     };
 

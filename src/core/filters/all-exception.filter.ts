@@ -26,12 +26,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.getResponse()
         : 'Internal server error';
 
-    if (this.configService.get('NODE_ENV') !== 'production') {
-      this.logger.error(
-        'Exception caught',
-        exception instanceof Error ? exception.stack : ''
-      );
-    }
+    this.logger.error(
+      'Exception caught',
+      exception instanceof Error ? exception.stack : ''
+    );
 
     response.status(status).json({
       message:

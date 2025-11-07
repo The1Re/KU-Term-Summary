@@ -25,60 +25,56 @@ export class TermCreditService {
           avgGrade: number;
         }>
       >`
-        WITH RECURSIVE category_hierarchy AS (
-          SELECT 
-            sc.subject_category_id, sc.subject_category_id AS root_category_id, sc.master_category
-          FROM subject_category sc
-
-          UNION ALL
-
-          SELECT 
-            c.subject_category_id, ch.root_category_id, c.master_category
-          FROM subject_category c
-          INNER JOIN category_hierarchy ch ON c.master_category = ch.subject_category_id
-        ),
-        category_credit AS (
-          SELECT
-              cr.subject_category_id,
-              SUM(subc.credit) AS totalCredit,
-              CASE
-                WHEN SUM(subc.credit) > 0
-                THEN SUM(subc.credit * sub.grade) / SUM(subc.credit)
-                ELSE NULL
-              END AS avgGrade
-          FROM credit_require AS cr
-          NATURAL JOIN subject AS s
-          NATURAL JOIN sub_credit AS subc
-          INNER JOIN (
-                SELECT 
-                  sc.subject_id,
-                  fsp.std_grade AS grade
-                FROM subject_course AS sc
-                NATURAL JOIN fact_student_plan AS fsp
-                WHERE 
-                  fsp.student_id = ${studentId}
-                  AND fsp.is_pass = TRUE
-                  AND (
-                    fsp.pass_year < ${year}
-                    OR (fsp.pass_year = ${year} AND fsp.pass_term <= ${term})
-                  )
-            ) AS sub ON sub.subject_id = s.subject_id
-          WHERE cr.course_plan_id = ${coursePlanId}
-          GROUP BY cr.subject_category_id
-        )
+      SELECT
+        root.subject_category_id AS subjectCategoryId,
+        SUM(cc.totalCredit) AS totalCredit,
+        CASE
+          WHEN SUM(cc.totalCredit) > 0
+          THEN SUM(cc.totalCredit * cc.avgGrade) / SUM(cc.totalCredit)
+          ELSE NULL
+        END AS avgGrade
+      FROM subject_category AS root
+      LEFT JOIN subject_category AS lv1
+        ON lv1.master_category = root.subject_category_id
+      LEFT JOIN subject_category AS lv2
+        ON lv2.master_category = lv1.subject_category_id
+      LEFT JOIN (
         SELECT
-          ch.root_category_id AS subjectCategoryId,
-          SUM(cc.totalCredit) AS totalCredit,
-          CASE 
-            WHEN SUM(cc.totalCredit) > 0
-            THEN SUM(cc.totalCredit * cc.avgGrade) / SUM(cc.totalCredit)
-            ELSE NULL
-          END AS avgGrade
-        FROM category_hierarchy ch
-        LEFT JOIN category_credit cc
-          ON ch.subject_category_id = cc.subject_category_id
-        GROUP BY ch.root_category_id
-        ORDER BY ch.root_category_id;
+            cr.subject_category_id,
+            SUM(subc.credit) AS totalCredit,
+            CASE
+              WHEN SUM(subc.credit) > 0
+              THEN SUM(subc.credit * sub.grade) / SUM(subc.credit)
+              ELSE NULL
+            END AS avgGrade
+        FROM credit_require AS cr
+        NATURAL JOIN subject AS s
+        NATURAL JOIN sub_credit AS subc
+        INNER JOIN (
+              SELECT
+                sc.subject_id,
+                fsp.std_grade AS grade
+              FROM subject_course AS sc
+              NATURAL JOIN fact_student_plan AS fsp
+              WHERE
+                fsp.student_id = ${studentId}
+                AND fsp.is_pass = TRUE
+                AND fsp.std_grade BETWEEN 1 AND 4
+                AND (
+                  fsp.pass_year < ${year}
+                  OR (fsp.pass_year = ${year} AND fsp.pass_term <= ${term})
+                )
+            ) AS sub ON sub.subject_id = s.subject_id
+        WHERE cr.course_plan_id = ${coursePlanId}
+        GROUP BY cr.subject_category_id
+      ) AS cc
+        ON cc.subject_category_id IN (
+          root.subject_category_id,
+          lv1.subject_category_id,
+          lv2.subject_category_id
+        )
+      GROUP BY root.subject_category_id
+      ORDER BY root.subject_category_id;
       `,
     ]);
 
