@@ -192,6 +192,8 @@ export class StudentPlanController {
       isPass: plan.isPass,
       passYear: plan.passYear,
       passTerm: plan.passTerm,
+      expectedPassingYear: plan.subjectCourse.partYear,
+      expectedPassingTerm: plan.subjectCourse.stdTerm,
       stdGrade: plan.stdGrade,
       gradeDetails: plan.gradeDetails,
       subject: {

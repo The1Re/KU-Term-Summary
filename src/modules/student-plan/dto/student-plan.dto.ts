@@ -53,6 +53,20 @@ export class StudentPlanDto implements Omit<FactStudentPlan, 'isRequire'> {
   passTerm: number | null;
 
   @ApiProperty({
+    example: 1,
+    description:
+      'The year the student should pass the subject course like 1,2,3,4',
+  })
+  expectedPassingYear: number | null;
+
+  @ApiProperty({
+    example: 1,
+    description:
+      'The term the student should pass the subject course like 1 (First Term),2 (Second Term),3 (Summer Term)',
+  })
+  expectedPassingTerm: number | null;
+
+  @ApiProperty({
     example: 3.5,
     description:
       'The standard grade the student achieved in the subject course',
