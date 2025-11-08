@@ -55,6 +55,12 @@ export class TermSummaryController {
           message: 'Both year and term must be provided together',
         },
       },
+      emptyStudentCodes: {
+        summary: 'studentCodes empty',
+        value: {
+          message: 'studentCodes is empty',
+        },
+      },
     },
   })
   @ApiResponse({
@@ -84,6 +90,10 @@ export class TermSummaryController {
       throw new BadRequestException(
         'Both year and term must be provided together'
       );
+    }
+
+    if (body?.studentCodes?.length === 0) {
+      throw new BadRequestException('studentCodes is empty');
     }
 
     if (body?.studentCodes) {
