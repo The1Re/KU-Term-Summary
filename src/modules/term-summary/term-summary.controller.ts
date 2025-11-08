@@ -5,6 +5,7 @@ import {
   Param,
   Post,
   Get,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateTermSummaryDto } from './dto/create-term-summary.dto';
@@ -30,12 +31,30 @@ export class TermSummaryController {
   @Post()
   @ApiOperation({
     summary: 'Create term summary for all students or a specific student',
+    description: `
+    - if no body provided, create term summary for all student and latest term only
+    - studentCodes: [...] for specific student else all students
+    - all: true to create term summary for all terms
+    - year and term: create term summary from specified year and term to the first term
+    `,
   })
   @ApiResponse({
     status: 201,
     description: 'Success',
     example: {
       message: 'Term summaries created/updated successfully',
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request',
+    examples: {
+      missingYearOrTerm: {
+        summary: 'Missing year or term',
+        value: {
+          message: 'Both year and term must be provided together',
+        },
+      },
     },
   })
   @ApiResponse({
@@ -60,6 +79,13 @@ export class TermSummaryController {
   @ApiBody({ required: false, type: CreateTermSummaryDto })
   async createTermSummary(@Body() body?: CreateTermSummaryDto) {
     let students: FactStudent[] = [];
+
+    if ((body?.year && !body.term) || (body?.term && !body.year)) {
+      throw new BadRequestException(
+        'Both year and term must be provided together'
+      );
+    }
+
     if (body?.studentCodes) {
       for (const code of body.studentCodes) {
         const student =
@@ -82,15 +108,45 @@ export class TermSummaryController {
         await this.studentPlanUsecase.createStudentPlan(student.studentId);
       }
       await this.studentPlanUsecase.updateStudentPlan(student.studentId);
-      const latestTerm = await this.termsummaryUsecase.latestTermSummary(
-        student.studentId
-      );
 
-      await this.termsummaryUsecase.createOrUpdateTermSummary(
-        student.studentId,
-        latestTerm?.year ?? 1,
-        latestTerm?.term ?? 1
-      );
+      if (body?.all) {
+        // create term summary for all terms
+        const allTerm = await this.termsummaryUsecase.getAllTerm(
+          student.studentId
+        );
+
+        for (const term of allTerm) {
+          await this.termsummaryUsecase.createOrUpdateTermSummary(
+            student.studentId,
+            term.studyYearInRegis!,
+            term.studyTermInRegis!
+          );
+        }
+      } else if (body?.year && body.term) {
+        // create term summary from specified year and term to the first term
+        for (let i = body.year; i >= 1; i--) {
+          for (let j = 3; j >= 1; j--) {
+            if ((i === body.year && j <= body.term) || i < body.year) {
+              await this.termsummaryUsecase.createOrUpdateTermSummary(
+                student.studentId,
+                i,
+                j
+              );
+            }
+          }
+        }
+      } else {
+        // create term summary for latest term only
+        const latestTerm = await this.termsummaryUsecase.latestTermSummary(
+          student.studentId
+        );
+
+        await this.termsummaryUsecase.createOrUpdateTermSummary(
+          student.studentId,
+          latestTerm?.year ?? 1,
+          latestTerm?.term ?? 1
+        );
+      }
     }
 
     return { message: 'Term summaries created/updated successfully' };
