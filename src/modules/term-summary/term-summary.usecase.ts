@@ -232,6 +232,10 @@ export class TermSummaryUseCase {
       r => r.studyYearInRegis === studyYear && r.studyTermInRegis === studyTerm
     );
 
+    if (registerInTerm.length === 0) {
+      return null;
+    }
+
     const creditTerm = registerInTerm.reduce(
       (sum, r) => sum + (r.gradeCharacter === 'F' ? 0 : (r.creditRegis ?? 0)),
       0
